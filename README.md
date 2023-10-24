@@ -18,9 +18,9 @@ graph TD
     end
 
     %% Conexões entre elementos
-    Logging --> |App logs| log["strucrec log"]
-    Tracing --> |Traces| trace["lib or agent"]
-    Metric --> |App metrics| metrics["lib or agent"]
+    Logging ---> |App logs| log["strucrec log"]
+    Tracing ---> |Traces| trace["lib or agent"]
+    Metric ---> |App metrics| metrics["lib or agent"]
 
     %% Subgráfico para OpenTelemetry (com Processamento e Exportação)
     subgraph opentelemetry["OpenTelemetry"]
