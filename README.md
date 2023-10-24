@@ -7,7 +7,7 @@ Plataforma de observabilidade (no formato de um MVP) que seja capaz de implement
 title: Observability Platform
 ---
 
-graph TD
+graph LR
     %% Subgráfico para Infra/Host/Pod/Container
     subgraph Infra["Infra/Host/Pod/container"]
     style Infra stroke:#3680db,stroke-width:4px;
@@ -16,48 +16,65 @@ graph TD
         style cluster stroke:#38345b,stroke-width:4px;
             %% Subgráfico para Application
             subgraph application["Application"]
-            style application stroke:#27ae60,stroke-width:4px;
-                Logging
-                Tracing
-                Metric
+            style application stroke:#38345b,stroke-width:4px;
+                a-Logging
+                a-Tracing
+                a-Metric
             end
         end
     end
 
-    %% Conexões entre elementos
-    Logging ---> |fas:fa-stream App logs| log(["strucrec log"])
-    Tracing ---> |fas:fa-sort-amount-up Traces| trace(["lib or agent"])
-    Metric ---> |fas:fa-sliders-h App metrics| metrics(["lib or agent"])
-
-    %% Subgráfico para OpenTelemetry (com Processamento e Exportação)
-    subgraph opentelemetry["OpenTelemetry Collector"]
-    style opentelemetry stroke:#f39c12,stroke-width:4px;
-        Logs
-        Traces
-        Metrics
-        Processor
-        Exporter
-    end
-
-    subgraph backend["Stack Grafana"]
-    style backend stroke:#e74c3c,stroke-width:4px;
-        b-Logs[(Logs)]
-        b-Traces[(Logs)]
-        b-Metrics[(Metrics)]
-    end
-
-    %% Aplicação e opentelemtry
-    log ---> Logs ---> Processor
-    trace ---> Traces ---> Processor
-    metrics ---> Metrics ---> Processor
-
-    %% Conexões entre elementos
+    %% Conexões cluster
     cluster ---> |fas:fa-sliders-h Infra Metrics| Metrics
     cluster ---> |fas:fa-stream System Logs| Logs
     cluster ---> |fas:fa-fingerprint Infra Attributes| opentelemetry
+    Metrics ---> o-Metrics
+    Logs ---> o-Logs
+
+    %% Aplicação opetnelemetry
+    application --- |Implement autoinstrumentation| autoinstrumentations
+    application --- |Agent Collector| sidecar
+
+    %% Subgráfico opentelemetry processamento e exporter
+    subgraph opentelemetry["OpenTelemetry"]
+    style opentelemetry stroke:#f39000,stroke-width:4px;
+        o-Logs
+        o-Traces
+        o-Metrics
+        Processor
+        Exporter
+        subgraph operator["Operator"]
+            autoinstrumentations["Instrument CRD"]
+            sidecar["Collector CRD"]
+        end 
+    end
+
+    %% Conexões opentelemetry processoe e exporter
+    a-Logging[Logging] ---> |fas:fa-stream App logs| o-Logs
+    a-Tracing[Tracing] ---> |fas:fa-sort-amount-up Traces| o-Traces
+    a-Metric[Metric] ---> |fas:fa-sliders-h App metrics| o-Metrics
+    o-Logs[Logs] ---> Processor
+    o-Traces[Traces] ---> Processor
+    o-Metrics[Metrics] ---> Processor
 
     %% Conexões para Processamento e Exportação dentro de OpenTelemetry
-    
     Processor ---> Exporter
-    Exporter ---> |Correlated Telemetry| backend
+    Exporter ---> |Correlated Telemetry| b-Logs
+    Exporter ---> |Correlated Telemetry| b-Metrics
+    Exporter ---> |Correlated Telemetry| b-Traces
+    
+    %% Subgráfico backend stack grafana
+    subgraph Grafana["Observability Stack"]
+    style backend stroke:#e85c3c,stroke-width:4px;
+        subgraph backend["Backend"]
+            g-Grafana["Grafana"]
+            b-Logs[(Logs Grafana Loki)]
+            b-Traces[(Traces Grafana Tempo)]
+            b-Metrics[(Metrics Grafana Mirmir)]
+        end
+    end
+    %% Conexões backend stack grafana
+    b-Logs --- g-Grafana
+    b-Traces --- g-Grafana
+    b-Metrics --- g-Grafana
 ```
