@@ -6,10 +6,7 @@ nodes:
 - role: control-plane
 - role: worker
   extraPortMappings:
-  - containerPort: 30950
+  - containerPort: 80
     hostPort: 80
-  labels:
-    tier: frontend
-- role: worker
-  labels:
-    tier: backend
+    protocol: TCP
+    listenAddress: "0.0.0.0"

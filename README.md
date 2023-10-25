@@ -78,3 +78,11 @@ graph LR
     b-Traces --- g-Grafana
     b-Metrics --- g-Grafana
 ```
+
+## Requisitos
+
+- [Docker](https://docs.docker.com/engine/install/)
+- [Kubectl](https://kubernetes.io/pt-br/docs/tasks/tools/#kubectl)
+- [Helm](https://helm.sh/docs/intro/install/)
+
+## Como usar

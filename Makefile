@@ -1,5 +1,6 @@
-export PROJECT_NAMESPACE=observability
-export CLUSTER_NAME=observability-platform
+PROJECT_NAMESPACE=observability
+CLUSTER_NAME=observability-platform
+CLUSTER_EXISTS = $(shell kind get clusters -q | grep $(CLUSTER_NAME))
 
 # HELP
 # This will output the help for each task
@@ -10,14 +11,6 @@ help: ## This help
 	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 
 .DEFAULT_GOAL := help
-
-run-local:
-	make -f Makefile.kind setup-kind
-	make -f Makefile build credentials install-local
-
-delete-local:
-	make -f Makefile uninstall-local
-	make -f Makefile.kind delete-kind-cluster
 
 install-kind: ## Install kind
 	@echo "Installing kind"
@@ -30,10 +23,19 @@ install-kind: ## Install kind
 	sudo mv kubectl /usr/local/bin/kubectl
 	sudo chmod +x /usr/local/bin/kubectl
 	@echo "Kubectl installed"
+	kubectl create namespace $(PROJECT_NAMESPACE)
 
 create-cluster: ## Create kind cluster
-	@echo "Creating kind cluster"
-	kind create cluster --name ${CLUSTER_NAME} --config=./config/kind-config.yaml
+    ifneq ($(CLUSTER_EXISTS), $(CLUSTER_NAME))
+		kind create cluster --name $(CLUSTER_NAME) --config=config/kind-config.yaml --wait 10s
+    else
+		kubectl cluster-info --context kind-$(CLUSTER_NAME)
+    endif
+    # Install metrics server
+	helm repo add metrics-server https://kubernetes-sigs.github.io/metrics-server/
+	helm repo update
+	helm upgrade --install --set args={--kubelet-insecure-tls} metrics-server metrics-server/metrics-server --namespace kube-system
+	kubectl rollout -n kube-system status deployment metrics-server
 
 delete-cluster: ## Delete kind cluster
 	kind delete cluster --name ${CLUSTER_NAME}
@@ -41,3 +43,8 @@ delete-cluster: ## Delete kind cluster
 
 display-cluster: ## Display kind cluster
 	kubectl cluster-info --context kind-${CLUSTER_NAME}
+
+deploy-platform: ## Deploy observability platform
+	@echo "Deploying Grafana"
+	helm repo add grafana https://grafana.github.io/helm-charts
+	helm upgrade --install --wait --create-namespace --namespace $(PROJECT_NAMESPACE) -f charts/grafana/values.yaml grafana-web grafana/grafana
