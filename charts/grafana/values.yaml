@@ -138,11 +138,7 @@ serviceMonitor:
   targetLabels: []
 
 ingress:
-  enabled: false
-  # For Kubernetes >= 1.18 you should specify the ingress-controller via the field ingressClassName
-  # See https://kubernetes.io/blog/2020/04/02/improvements-to-the-ingress-api-in-kubernetes-1.18/#specifying-the-class-of-an-ingress
-  # ingressClassName: nginx
-  # Values can be templated
+  enabled: true
   annotations: {}
     # kubernetes.io/ingress.class: nginx
     # kubernetes.io/tls-acme: "true"
@@ -153,7 +149,7 @@ ingress:
   pathType: Prefix
 
   hosts:
-    - chart-example.local
+    - observability.platform.local
 
 resources:
   limits:
@@ -231,6 +227,7 @@ admin:
 # Inject Kubernetes services as environment variables.
 # See https://kubernetes.io/docs/concepts/services-networking/connect-applications-service/#environment-variables
 enableServiceLinks: true
+
 dashboardProviders: {}
 #  dashboardproviders.yaml:
 #    apiVersion: 1
@@ -814,14 +811,3 @@ networkPolicy:
 # Enable backward compatibility of kubernetes where version below 1.13 doesn't have the enableServiceLinks option
 enableKubeBackwardCompatibility: false
 useStatefulSet: false
-# Create a dynamic manifests via values:
-extraObjects: []
-  # - apiVersion: "kubernetes-client.io/v1"
-  #   kind: ExternalSecret
-  #   metadata:
-  #     name: grafana-secrets
-  #   spec:
-  #     backendType: gcpSecretsManager
-  #     data:
-  #       - key: grafana-admin-password
-  #         name: adminPassword
