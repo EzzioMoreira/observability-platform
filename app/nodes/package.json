@@ -1,0 +1,15 @@
+{
+  "name": "app",
+  "version": "1.0.0",
+  "description": "Meu aplicativo Node.js",
+  "main": "app.js",
+  "dependencies": {
+    "express": "^4.17.1",
+    "isomorphic-fetch": "^3.0.0"
+  },
+  "scripts": {
+    "start": "node app.js"
+  },
+  "author": "Seu Nome",
+  "license": "ISC"
+}

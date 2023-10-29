@@ -1,0 +1,24 @@
+apiVersion: opentelemetry.io/v1alpha1
+kind: OpenTelemetryCollector
+metadata:
+  name: sidecar-jaeger
+spec:
+  mode: sidecar
+  config: |
+    receivers:
+      jaeger:
+        protocols:
+          thrift_compact:
+    processors:
+
+    exporters:
+      otlp:
+        endpoint: http://platform-collector.observability.svc.cluster.local:4317
+
+    service:
+      pipelines:
+        traces:
+          receivers: [jaeger]
+          processors: []
+          exporters: [otlp]
+

@@ -1,8 +1,10 @@
 PROJECT_NAMESPACE=observability
 CLUSTER_NAME=observability-platform
 CLUSTER_EXISTS = $(shell kind get clusters -q | grep $(CLUSTER_NAME))
-DOCKER_SUBNET = $(shell docker network inspect -f '{{(index .IPAM.Config 0).Subnet}}' kind)
-DNS_LOCAL = $(shell docker container inspect observability-platform-worker --format '{{ .NetworkSettings.Networks.kind.IPAddress }}')
+DNS_LOCAL1 := $(shell docker container inspect $(CLUSTER_NAME)-worker --format '{{ .NetworkSettings.Networks.kind.IPAddress }}')
+DNS_LOCAL2 := $(shell docker container inspect $(CLUSTER_NAME)-control-plane --format '{{ .NetworkSettings.Networks.kind.IPAddress }}')
+export DOCKER_IPAM_SUBNET = $(shell docker network inspect -f '{{(index .IPAM.Config 0).Subnet}}' kind)
+export KIND_CONFIG_FILE_NAME=kind.config.yaml
 
 # HELP
 # This will output the help for each task
@@ -14,88 +16,103 @@ help: ## This help
 
 .DEFAULT_GOAL := help
 
-define METALLB_CONFIG
-cat <<EOF
-{
-	"apiVersion": "v1",
-	"kind": "List",
-	"items": [
-		{
-			"apiVersion": "metallb.io/v1beta1",
-			"kind": "IPAddressPool",
-			"metadata": {
-				"name": "metallb-pool",
-				"namespace": "metallb-system"
-			},
-			"spec": {
-				"addresses": [
-					"$(DOCKER_SUBNET)"
-				]
-			}
-		},
-		{
-			"apiVersion": "metallb.io/v1beta1",
-			"kind": "L2Advertisement",
-			"metadata": {
-				"name": "empty",
-				"namespace": "metallb-system"
-			}
-		}
-	]
-}
+## Create file definition for metallb
+define get_metalb_config_file
+# Define config file
+cat << EOF ${METALLB_CONFIG_FILE_NAME}
+apiVersion: v1
+kind: List
+items:
+- apiVersion: metallb.io/v1beta1
+  kind: IPAddressPool
+  metadata:
+    name: metallb-pool
+    namespace: metallb-system
+  spec:
+    addresses:
+    - "${DOCKER_IPAM_SUBNET}"
+- apiVersion: metallb.io/v1beta1
+  kind: L2Advertisement
+  metadata:
+    name: empty
+    namespace: metallb-system
 EOF
 endef
+export METALLB_CONFIG_FILE_CREATOR = $(value get_metalb_config_file)
 
-install-kind: ## Install kind
+install-kind: ## Instala kind
 	@echo "Installing kind"
 	curl -Lo ./kind https://kind.sigs.k8s.io/dl/v0.20.0/kind-linux-amd64
 	chmod +x ./kind
 	sudo mv ./kind /usr/local/bin/kind
 	@echo "Kind installed"
-	@echo "Installing kubectl"
-	curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
-	sudo mv kubectl /usr/local/bin/kubectl
-	sudo chmod +x /usr/local/bin/kubectl
-	@echo "Kubectl installed"
-	kubectl create namespace $(PROJECT_NAMESPACE)
 
-create-cluster: ## Create kind cluster, execute with sudo
+create-cluster: ## Cria cluster Kind com balanceador, ingress-nginx, cert-manager e metrics-server
     ifneq ($(CLUSTER_EXISTS), $(CLUSTER_NAME))
 		kind create cluster --name $(CLUSTER_NAME) --config=config/kind-config.yaml --wait 10s
     else
 		kubectl cluster-info --context kind-$(CLUSTER_NAME)
     endif
     
-	# Install metrics server
-		helm repo add metrics-server https://kubernetes-sigs.github.io/metrics-server/
-		helm repo update
-		helm upgrade --install --set args={--kubelet-insecure-tls} metrics-server metrics-server/metrics-server --namespace kube-system
-		kubectl rollout -n kube-system status deployment metrics-server
-	# Install MetalLB LoadBalancer
-		kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.13.7/config/manifests/metallb-native.yaml
-		kubectl rollout status -n metallb-system deployment controller
-		@ eval "$$METALLB_CONFIG" | kubectl apply -f -
-	# Install ingress-nginx
-		kubectl apply --filename https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/static/provider/kind/deploy.yaml
-		kubectl wait --namespace ingress-nginx --for=condition=ready pod  --selector=app.kubernetes.io/component=controller --timeout=90s
-	# Configure dns
-		@if grep -q 'observability.platform.local' /etc/hosts; then \
-        	sudo sed -i 's/.*observability.platform.local.*/$(DNS_LOCAL) observability.platform.local/' /etc/hosts; \
-    	else \
-        	sudo echo '$(DNS_LOCAL) observability.platform.local' >> /etc/hosts; \
-    	fi
+	@echo "#### Installing metrics-server ####"
+	helm repo add metrics-server https://kubernetes-sigs.github.io/metrics-server/
+	helm upgrade --install -n kube-system metrics-server metrics-server/metrics-server
+	@echo
+	@echo "#### Installing CertManager ####"
+	kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.13.1/cert-manager.yaml
+	@echo
+	@echo "#### Installing ingress-nginx ####"
+	kubectl apply --filename https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/static/provider/kind/deploy.yaml
+	kubectl wait --namespace ingress-nginx --for=condition=ready pod  --selector=app.kubernetes.io/component=controller --timeout=90s
+	@echo
+	@echo "#### Configuring DNS $(DNS_LOCAL1) and $(DNS_LOCAL2) for observability.platform.local ####"
+	@if grep -q 'observability.platform.local' /etc/hosts; then \
+       	sudo sed -i '/observability.platform.local/d' /etc/hosts; \
+    fi
+	@echo "$(DNS_LOCAL1) observability.platform.local" | sudo tee -a /etc/hosts
+	@echo "$(DNS_LOCAL2) observability.platform.local" | sudo tee -a /etc/hosts
+	@echo
+	@echo "#### Make sure to change addresses range into to your Docker IPAM Subnet ${DOCKER_IPAM_SUBNET} ####"
+	kubectl apply -f  https://raw.githubusercontent.com/metallb/metallb/v0.13.7/config/manifests/metallb-native.yaml
+	kubectl wait -n metallb-system --for=condition=ready pod --selector=component=controller --timeout=90s
 
-delete-cluster: ## Delete kind cluster
+delete-cluster: ## Exclui cluster Kind
 	kind delete cluster --name ${CLUSTER_NAME}
 	docker system prune
 
-display-cluster: ## Display kind cluster
+display-cluster: ## Exibe informações do cluster
 	kubectl cluster-info --context kind-${CLUSTER_NAME}
 
-deploy-platform: ## Deploy observability platform
+deploy-platform: ## Implata plataforma de observabilidade
+	@echo "Apply the addresses $(DOCKER_IPAM_SUBNET) range has been changed"
+	@ eval "$$METALLB_CONFIG_FILE_CREATOR"
+	@ eval "$$METALLB_CONFIG_FILE_CREATOR" | kubectl apply -f -
+	@echo
 	@echo "Deploying Grafana"
 	helm repo add grafana https://grafana.github.io/helm-charts
 	helm upgrade --install --wait --create-namespace --namespace $(PROJECT_NAMESPACE) -f charts/grafana/values.yaml grafana-web grafana/grafana
+	@echo
+	@echo "#### Installing OpenTelemetry Operator ####"
+	kubectl apply -f https://github.com/open-telemetry/opentelemetry-operator/releases/latest/download/opentelemetry-operator.yaml
+	kubectl wait -n opentelemetry-operator-system --for=condition=ready pod --selector=app.kubernetes.io/name=opentelemetry-operator --timeout=90s
+	@echo
+	@echo "#### Installing OpenTelemetry Collector ####"
+	kubectl -n $(PROJECT_NAMESPACE) apply -f charts/opentelemetry/collector.yaml
+	kubectl wait -n $(PROJECT_NAMESPACE) --for=condition=ready pod --selector=app.kubernetes.io/component=opentelemetry-collector --timeout=90s
+	@echo
+	@echo "#### Installing OpenTelemetry Instrumentation ####"
+	kubectl apply -f charts/opentelemetry/instrumentation.yaml
+	kubectl get instrumentation
+	@echo
+	@echo "#### Installing OpenTelemetry Sidecar Collector ####"
+	kubectl -n $(PROJECT_NAMESPACE) apply -f charts/opentelemetry/sidecar-collector.yaml
+	kubectl -n observability get OpenTelemetryCollector sidecar-jaeger
+	@echo
 
-update-hosts: ## Update hosts file
-	
+deploy-applications: ## Implata aplicações de exemplo
+	@echo "#### Installing App Python ####"
+	kubectl apply -f app/python/deployment.yaml
+	@echo
+	@echo "#### Installing App NodeJS ####"
+	kubectl apply -f app/nodes/deployment.yaml
+	@echo

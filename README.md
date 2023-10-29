@@ -85,5 +85,11 @@ graph LR
 - [Kubectl](https://kubernetes.io/pt-br/docs/tasks/tools/#kubectl)
 - [Helm](https://helm.sh/docs/intro/install/)
 
-## Como usar
+## Ajuda
+
+Para ajuda, digite o comando a seguir no dirátorio raiz do projeto. 
+
+```shell
+make help
+```
 

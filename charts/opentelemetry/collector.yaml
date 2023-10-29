@@ -1,0 +1,66 @@
+apiVersion: opentelemetry.io/v1alpha1
+kind: OpenTelemetryCollector
+metadata:
+  name: platform
+spec:
+  mode: "deployment"
+  config: |
+    receivers:
+      otlp:
+        protocols:
+          grpc:
+          http:
+    processors:
+      memory_limiter:
+        check_interval: 1s
+        limit_percentage: 75
+        spike_limit_percentage: 15
+      batch:
+        send_batch_size: 10000
+        timeout: 10s
+    exporters:
+      otlp:
+        endpoint: jaeger-collector:4317
+        tls:
+          insecure: true
+      # NOTE: Prior to v0.86.0 use `logging` instead of `debug`.
+      debug:
+
+    service:
+      pipelines:
+        traces:
+          receivers: [otlp]
+          processors: [memory_limiter, batch]
+          exporters: [debug, otlp]
+        metrics:
+          receivers: [otlp]
+          processors: [memory_limiter, batch]
+          exporters: [debug]
+        logs:
+          receivers: [otlp]
+          processors: [memory_limiter, batch]
+          exporters: [debug]
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: platform-collector-ingress
+spec:
+  rules:
+  - host: observability.platform.local
+    http:
+      paths:
+      - path: /otel-http
+        pathType: Prefix
+        backend:
+          service:
+            name: platform-collector
+            port:
+              number: 80
+      - path: /otel-grpc
+        pathType: Prefix
+        backend:
+          service:
+            name: platform-collector
+            port:
+              number: 80

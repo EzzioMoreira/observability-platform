@@ -1,0 +1,35 @@
+apiVersion: opentelemetry.io/v1alpha1
+kind: Instrumentation
+metadata:
+  name: python-instrumentation
+spec:
+  exporter:
+    endpoint: http://platform-collector.observability.svc.cluster.local:4318
+  propagators:
+    - tracecontext
+    - baggage
+    - b3
+    - b3multi
+    - jaeger
+    - ottrace
+  sampler:
+    type: parentbased_traceidratio
+    argument: "1"
+---
+apiVersion: opentelemetry.io/v1alpha1
+kind: Instrumentation
+metadata:
+  name: node-instrumentation
+spec:
+  exporter:
+    endpoint: http://platform-collector.observability.svc.cluster.local:4317
+  propagators:
+    - tracecontext
+    - baggage
+    - b3
+    - b3multi
+    - jaeger
+    - ottrace
+  sampler:
+    type: parentbased_traceidratio
+    argument: "1"

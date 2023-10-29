@@ -228,18 +228,18 @@ admin:
 # See https://kubernetes.io/docs/concepts/services-networking/connect-applications-service/#environment-variables
 enableServiceLinks: true
 
-dashboardProviders: {}
-#  dashboardproviders.yaml:
-#    apiVersion: 1
-#    providers:
-#    - name: 'default'
-#      orgId: 1
-#      folder: ''
-#      type: file
-#      disableDeletion: false
-#      editable: true
-#      options:
-#        path: /var/lib/grafana/dashboards/default
+dashboardProviders:
+  dashboardproviders.yaml:
+    apiVersion: 1
+    providers:
+    - name: 'default'
+      orgId: 1
+      folder: ''
+      type: file
+      disableDeletion: false
+      editable: true
+      options:
+        path: /var/lib/grafana/dashboards/default
 
 ## Configure grafana dashboard to import
 ## NOTE: To use dashboards you must also enable/configure dashboardProviders
@@ -247,17 +247,14 @@ dashboardProviders: {}
 ##
 ## dashboards per provider, use provider name as key.
 ##
-dashboards: {}
-  # default:
-  #   some-dashboard:
-  #     json: |
-  #       $RAW_JSON
-  #   custom-dashboard:
-  #     file: dashboards/custom-dashboard.json
-  #   prometheus-stats:
-  #     gnetId: 2
-  #     revision: 2
-  #     datasource: Prometheus
+dashboards:
+  default:
+    custom-dashboard:
+      file: ./dashboards/logging-loki.json
+    loki-logging:
+      gnetId: 12611
+      revision: 2
+      datasource: Prometheus
   #   local-dashboard:
   #     url: https://example.com/repository/test.json
   #     token: ''
@@ -433,7 +430,7 @@ sidecar:
     # Sets the size limit of the alert sidecar emptyDir volume
     sizeLimit: {}
   dashboards:
-    enabled: false
+    enabled: true
     # Additional environment variables for the dashboards sidecar
     env: {}
     # Do not reprocess already processed unchanged resources on k8s API reconnect.
