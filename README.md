@@ -92,4 +92,14 @@ Para ajuda, digite o comando a seguir no dirátorio raiz do projeto.
 ```shell
 make help
 ```
+Saída:
 
+```shell
+help                 This help
+install-kind         Instala kind
+create-cluster       Cria cluster Kind com balanceador, ingress-nginx, cert-manager e metrics-server
+delete-cluster       Exclui cluster Kind
+display-cluster      Exibe informações do cluster
+deploy-platform      Implata plataforma de observabilidade
+deploy-applications  Implata aplicações de exemplo
+```
