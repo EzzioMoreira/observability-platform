@@ -1,57 +1,57 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: app-python
+  name: vertx-create-span
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: app-python
+      app: vertx-create-span
   template:
     metadata:
       labels:
-        app: app-python
+        app: vertx-create-span
       annotations:
-        # Note: Use true or name the instrumentation, instrumentation.opentelemetry.io/inject-python: python-instrumentation
-        instrumentation.opentelemetry.io/inject-python: "true"
+        sidecar.opentelemetry.io/inject: sidecar-jaeger
     spec:
       containers:
-      - name: app-python
-        image: ezmo/app-python:v1.0
+      - name: vertx-create-span
+        image: jpkroehling/vertx-create-span:latest
         imagePullPolicy: IfNotPresent
         env:
         - name: OTEL_SERVICE_NAME
-          value: "app-python"
+          value: "vertx-create-span"
         resources:
           limits:
             memory: "128Mi"
             cpu: "500m"
         ports:
-        - containerPort: 8000
+        - containerPort: 3000
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: app-python-service
+  name: vertx-create-span-service
 spec:
   selector:
-    app: app-python
+    app: vertx-create-span
   ports:
   - port: 80
-    targetPort: 8000
+    targetPort: 3000
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: app-python-ingress
+  name: vertx-create-span-ingress
 spec:
   rules:
-  - http:
+  - host: "observability.platform.local"
+    http:
       paths:
-      - path: /python
+      - path: /java
         pathType: Prefix
         backend:
           service:
-            name: app-python-service
+            name: vertx-create-span-service
             port:
               number: 80

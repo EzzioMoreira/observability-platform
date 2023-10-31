@@ -74,7 +74,7 @@ create-cluster: ## Cria cluster Kind com balanceador, ingress-nginx, cert-manage
 	@echo
 	@echo "#### Make sure to change addresses range into to your Docker IPAM Subnet ${DOCKER_IPAM_SUBNET} ####"
 	kubectl apply -f  https://raw.githubusercontent.com/metallb/metallb/v0.13.7/config/manifests/metallb-native.yaml
-	kubectl wait -n metallb-system --for=condition=ready pod --selector=component=controller --timeout=90s
+	kubectl wait -n metallb-system --for=condition=ready pod --selector=component=controller --timeout=120s
 
 delete-cluster: ## Exclui cluster Kind
 	kind delete cluster --name ${CLUSTER_NAME}
@@ -105,8 +105,8 @@ deploy-platform: ## Implata plataforma de observabilidade
 	kubectl get instrumentation
 	@echo
 	@echo "#### Installing OpenTelemetry Sidecar Collector ####"
-	kubectl -n $(PROJECT_NAMESPACE) apply -f charts/opentelemetry/sidecar-collector.yaml
-	kubectl -n observability get OpenTelemetryCollector sidecar-jaeger
+	kubectl apply -f charts/opentelemetry/sidecar-collector.yaml
+	kubectl get OpenTelemetryCollector sidecar-jaeger
 	@echo
 
 deploy-applications: ## Implata aplicações de exemplo
@@ -115,4 +115,18 @@ deploy-applications: ## Implata aplicações de exemplo
 	@echo
 	@echo "#### Installing App NodeJS ####"
 	kubectl apply -f app/nodes/deployment.yaml
+	@echo
+	@echo "#### Installing App Java ####"
+	kubectl apply -f app/java/deployment.yaml
+	@echo
+
+delete-applications: ## Exclui aplicações de exemplo
+	@echo "#### Deleting App Python ####"
+	kubectl delete -f app/python/deployment.yaml
+	@echo
+	@echo "#### Deleting App NodeJS ####"
+	kubectl delete -f app/nodes/deployment.yaml
+	@echo
+	@echo "#### Deleting App Java ####"
+	kubectl delete -f app/java/deployment.yaml
 	@echo
