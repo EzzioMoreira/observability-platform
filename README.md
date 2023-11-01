@@ -147,6 +147,7 @@ app-sidecar --->|"Telemetry collect"| app
 
 O Resource Collector do Operator OponTelemetry é responsável por centralizar o recebimento e processamento de diversas fontes do cluster Kubernetes e encaminhar os dados para um ou mais provedores de observabilidade.
 
+```mermaid
 ---
 title: Componentes OpenTelemetry Collector
 ---
@@ -200,6 +201,7 @@ cluster --->|Sending Telemetry data| openTelemetry
 openTelemetry ---> Trace
 openTelemetry ---> Metric
 openTelemetry ---> Log
+```
 
 ## Requisitos
 
