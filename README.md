@@ -79,6 +79,128 @@ graph LR
     b-Metrics --- g-Grafana
 ```
 
+### Componente Intrumentação Automática
+
+O Resource Instrumentation do Operator OponTelemetry implementa as configurações necessárias no Pod, através do Init Container injentando agentes ou biblioteca do OpenTelemetry, permitindo a geração, colete e envio dos dados de telemetria.
+
+```mermaid
+---
+title: Componentes OpenTelemetry Instrumentation
+---
+
+graph
+
+subgraph openTelemetry["OpenTelemetry"]
+  style openTelemetry stroke:#f39000,stroke-width:4px;
+  subgraph components["Components"]
+    style components stroke:#f39000,stroke-width:2px;
+    autoinstrumentation["Autoinstrumentation"]
+  end
+end
+
+subgraph application["Application Pod"]
+  style application stroke:#38345b,stroke-width:4px;
+  subgraph container["Containers"]
+    init["Initi container Otel"]
+    app["Application"]
+  end
+  
+end
+
+openTelemetry --->|Instrumentation Configuration| application
+init --->|"Inject agent or lib"| app
+```
+
+### Componente Sidecar OpenTelemetry Collector
+
+O Resource Sidecar do Operator OponTelemetry cria um segundo container no Pod da aplicação que será responsável pela coleta e transporte dos dados de telemetria.
+
+```mermaid
+---
+title: Componentes OpenTelemetry Sidecar
+---
+
+graph
+
+subgraph openTelemetry["OpenTelemetry"]
+  style openTelemetry stroke:#f39000,stroke-width:4px;
+  subgraph components["Components"]
+    style components stroke:#f39000,stroke-width:2px;
+    sidecar["sidecar"]
+  end
+end
+
+subgraph application["Application Pod"]
+  style application stroke:#38345b,stroke-width:4px;
+  subgraph container["Containers"]
+    app-sidecar["Sidecar Collector"]
+    app["Application"]
+  end
+  
+end
+
+openTelemetry --->|Instrumentation Configuration| application
+app-sidecar --->|"Telemetry collect"| app
+```
+
+### Componente OpenTelemetry Collector
+
+O Resource Collector do Operator OponTelemetry é responsável por centralizar o recebimento e processamento de diversas fontes do cluster Kubernetes e encaminhar os dados para um ou mais provedores de observabilidade.
+
+---
+title: Componentes OpenTelemetry Collector
+---
+
+graph
+
+subgraph openTelemetry["OpenTelemetry"]
+  style openTelemetry stroke:#f39000,stroke-width:4px;
+  subgraph components["Components"]
+    style components stroke:#f39000,stroke-width:2px;
+    collector["collector"]
+  end
+end
+
+subgraph application["Application Pod with sidecar"]
+  style application stroke:#4d7eb7,stroke-width:4px;
+  subgraph container["Containers"]
+    app-sidecar["Sidecar Collector"]
+    app["Application"]
+  end
+end
+
+subgraph application2["Application Pod"]
+  style application2 stroke:#4d7eb7,stroke-width:4px;
+  subgraph container2["Containers"]
+    app2["Application"]
+  end
+end
+
+subgraph cluster["Kubernetes"]
+style cluster stroke:#4d7eb7,stroke-width:4px;
+node["Nodes"]
+control["Control Plane"]
+runtime["Container Runtime"]
+controllers["Contollers"]
+schedule["Scheduler"]
+end
+
+subgraph backend["Observability Backend"]
+style backend stroke:#4d7eb7,stroke-width:4px;
+Trace
+Metric
+Log
+end
+
+
+application --->|Sending Telemetry data| openTelemetry
+application2 --->|Sending Telemetry data| openTelemetry
+app-sidecar --->|"Telemetry collect"| app
+cluster --->|Sending Telemetry data| openTelemetry
+openTelemetry ---> Trace
+openTelemetry ---> Metric
+openTelemetry ---> Log
+
 ## Requisitos
 
 - [Docker](https://docs.docker.com/engine/install/)
