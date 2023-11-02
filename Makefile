@@ -11,7 +11,7 @@ export KIND_CONFIG_FILE_NAME=kind.config.yaml
 # thanks to https://marmelab.com/blog/2016/02/29/auto-documented-makefile.html
 .PHONY: help
 
-help: ## This help
+help: ## Ajuda
 	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 
 .DEFAULT_GOAL := help
@@ -87,7 +87,7 @@ delete-cluster: ## Exclui cluster Kind
 display-cluster: ## Exibe informações do cluster
 	kubectl cluster-info --context kind-${CLUSTER_NAME}
 
-deploy-platform: ## Implata plataforma de observabilidade
+deploy-platform: ## Implanta plataforma de observabilidade
 	@echo "Apply the addresses $(DOCKER_IPAM_SUBNET) range has been changed"
 	@ eval "$$METALLB_CONFIG_FILE_CREATOR"
 	@ eval "$$METALLB_CONFIG_FILE_CREATOR" | kubectl apply -f -
@@ -113,7 +113,7 @@ deploy-platform: ## Implata plataforma de observabilidade
 	kubectl get OpenTelemetryCollector sidecar-jaeger
 	@echo
 
-deploy-applications: ## Implata aplicações de exemplo
+deploy-applications: ## Implanta aplicações de exemplo
 	@echo "#### Installing App Python ####"
 	kubectl apply -f app/python/deployment.yaml
 	@echo
