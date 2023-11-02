@@ -88,7 +88,7 @@ O Resource Instrumentation do Operator OponTelemetry implementa as configuraçõ
 title: Componentes OpenTelemetry Instrumentation
 ---
 
-graph
+graph LR
 
 subgraph openTelemetry["OpenTelemetry"]
   style openTelemetry stroke:#f39000,stroke-width:4px;
@@ -113,14 +113,14 @@ init --->|"Inject agent or lib"| app
 
 ### Componente Sidecar OpenTelemetry Collector
 
-O Resource Sidecar do Operator OponTelemetry cria um segundo container no Pod da aplicação que será responsável pela coleta e transporte dos dados de telemetria.
+O Resource Sidecar do Operator OponTelemetry cria um segundo container no Pod da aplicação que será responsável pela coleta e transporte dos dados de telemetria dos serviços que não suportam o envio dos dados diretamente para o collector central.
 
 ```mermaid
 ---
 title: Componentes OpenTelemetry Sidecar
 ---
 
-graph
+graph LR
 
 subgraph openTelemetry["OpenTelemetry"]
   style openTelemetry stroke:#f39000,stroke-width:4px;
@@ -152,7 +152,7 @@ O Resource Collector do Operator OponTelemetry é responsável por centralizar o
 title: Componentes OpenTelemetry Collector
 ---
 
-graph
+graph LR
 
 subgraph openTelemetry["OpenTelemetry"]
   style openTelemetry stroke:#f39000,stroke-width:4px;
