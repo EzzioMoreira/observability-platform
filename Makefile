@@ -47,7 +47,7 @@ install-kind: ## Instala kind
 	sudo mv ./kind /usr/local/bin/kind
 	@echo "Kind installed"
 
-create-cluster: ## Cria cluster Kind com balanceador, ingress-nginx, cert-manager e metrics-server
+create-cluster: configure-dns ## Cria cluster Kind com balanceador, ingress-nginx, cert-manager e metrics-server
     ifneq ($(CLUSTER_EXISTS), $(CLUSTER_NAME))
 		kind create cluster --name $(CLUSTER_NAME) --config=config/kind-config.yaml --wait 10s
     else
@@ -65,16 +65,20 @@ create-cluster: ## Cria cluster Kind com balanceador, ingress-nginx, cert-manage
 	kubectl apply --filename https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/static/provider/kind/deploy.yaml
 	kubectl wait --namespace ingress-nginx --for=condition=ready pod  --selector=app.kubernetes.io/component=controller --timeout=90s
 	@echo
+	@echo "#### Make sure to change addresses range into to your Docker IPAM Subnet ${DOCKER_IPAM_SUBNET} ####"
+	kubectl apply -f  https://raw.githubusercontent.com/metallb/metallb/v0.13.7/config/manifests/metallb-native.yaml
+	kubectl wait -n metallb-system --for=condition=ready pod --selector=component=controller --timeout=120s
+	@echo
+	@echo "#### Configuração DNS ####"	
+	@make configure-dns
+
+configure-dns: ## Configuração DNS
 	@echo "#### Configuring DNS $(DNS_LOCAL1) and $(DNS_LOCAL2) for observability.platform.local ####"
 	@if grep -q 'observability.platform.local' /etc/hosts; then \
        	sudo sed -i '/observability.platform.local/d' /etc/hosts; \
     fi
 	@echo "$(DNS_LOCAL1) observability.platform.local" | sudo tee -a /etc/hosts
 	@echo "$(DNS_LOCAL2) observability.platform.local" | sudo tee -a /etc/hosts
-	@echo
-	@echo "#### Make sure to change addresses range into to your Docker IPAM Subnet ${DOCKER_IPAM_SUBNET} ####"
-	kubectl apply -f  https://raw.githubusercontent.com/metallb/metallb/v0.13.7/config/manifests/metallb-native.yaml
-	kubectl wait -n metallb-system --for=condition=ready pod --selector=component=controller --timeout=120s
 
 delete-cluster: ## Exclui cluster Kind
 	kind delete cluster --name ${CLUSTER_NAME}
