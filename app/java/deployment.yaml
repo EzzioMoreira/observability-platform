@@ -54,4 +54,4 @@ spec:
           service:
             name: vertx-create-span-service
             port:
-              number: 80
+              number: 3000

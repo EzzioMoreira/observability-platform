@@ -1,4 +1,3 @@
-PROJECT_NAMESPACE=observability
 CLUSTER_NAME=observability-platform
 CLUSTER_EXISTS = $(shell kind get clusters -q | grep $(CLUSTER_NAME))
 DNS_LOCAL1 := $(shell docker container inspect $(CLUSTER_NAME)-worker --format '{{ .NetworkSettings.Networks.kind.IPAddress }}')
@@ -58,17 +57,21 @@ create-cluster: configure-dns ## Cria cluster Kind com balanceador, ingress-ngin
 	helm repo add metrics-server https://kubernetes-sigs.github.io/metrics-server/
 	helm upgrade --install -n kube-system metrics-server metrics-server/metrics-server
 	@echo
+
 	@echo "#### Installing CertManager ####"
 	kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.13.1/cert-manager.yaml
 	@echo
+
 	@echo "#### Installing ingress-nginx ####"
 	kubectl apply --filename https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/static/provider/kind/deploy.yaml
-	kubectl wait --namespace ingress-nginx --for=condition=ready pod  --selector=app.kubernetes.io/component=controller --timeout=90s
+	kubectl wait --namespace ingress-nginx --for=condition=ready pod  --selector=app.kubernetes.io/component=controller --timeout=120s
 	@echo
+
 	@echo "#### Make sure to change addresses range into to your Docker IPAM Subnet ${DOCKER_IPAM_SUBNET} ####"
 	kubectl apply -f  https://raw.githubusercontent.com/metallb/metallb/v0.13.7/config/manifests/metallb-native.yaml
 	kubectl wait -n metallb-system --for=condition=ready pod --selector=component=controller --timeout=120s
 	@echo
+
 	@echo "#### Configuração DNS ####"	
 	@make configure-dns
 
@@ -88,41 +91,74 @@ display-cluster: ## Exibe informações do cluster
 	kubectl cluster-info --context kind-${CLUSTER_NAME}
 
 deploy-platform: ## Implanta plataforma de observabilidade
-	@echo "Apply the addresses $(DOCKER_IPAM_SUBNET) range has been changed"
+	@echo "#### Apply the addresses $(DOCKER_IPAM_SUBNET) range has been changed ####"
 	@ eval "$$METALLB_CONFIG_FILE_CREATOR"
 	@ eval "$$METALLB_CONFIG_FILE_CREATOR" | kubectl apply -f -
 	@echo
-	@echo "Deploying Grafana"
-	helm repo add grafana https://grafana.github.io/helm-charts
-	helm upgrade --install --wait --create-namespace --namespace $(PROJECT_NAMESPACE) -f charts/grafana/values.yaml grafana-web grafana/grafana
+
+	@echo "#### Installing Minio S3 ####"
+	kubectl apply -f charts/minio/minio.yaml
 	@echo
+
+	@echo "#### Installing Grafana Operator ####"
+	helm upgrade --install --wait --create-namespace --namespace observability grafana-operator oci://ghcr.io/grafana-operator/helm-charts/grafana-operator --version v5.4.2
+	kubectl wait -n observability --for=condition=ready pod --selector=app.kubernetes.io/instance=grafana-operator --timeout=120s
+	@echo
+
+	@echo "#### Deploying Grafana Web ####"
+	kubectl -n observability apply -f charts/grafana/grafana.yaml
+	kubectl wait -n observability --for=condition=ready pod --selector=app=grafana --timeout=120s
+	kubectl -n observability apply -f charts/grafana/datasource.yaml
+	@echo
+
+	@echo "#### Installing Tempo Operator ####"
+	kubectl apply -f https://github.com/grafana/tempo-operator/releases/latest/download/tempo-operator.yaml
+	kubectl wait -n tempo-operator-system --for=condition=ready pod --selector=app.kubernetes.io/name=tempo-operator --timeout=120s
+	@echo
+
+	@echo "#### Installing Tempo ####"
+	kubectl -n observability apply -f charts/tempo/tempo.yaml
+	@echo
+
 	@echo "#### Installing OpenTelemetry Operator ####"
 	kubectl apply -f https://github.com/open-telemetry/opentelemetry-operator/releases/latest/download/opentelemetry-operator.yaml
-	kubectl wait -n opentelemetry-operator-system --for=condition=ready pod --selector=app.kubernetes.io/name=opentelemetry-operator --timeout=90s
+	kubectl wait -n opentelemetry-operator-system --for=condition=ready pod --selector=app.kubernetes.io/name=opentelemetry-operator --timeout=120s
 	@echo
+	
 	@echo "#### Installing OpenTelemetry Collector ####"
-	kubectl -n $(PROJECT_NAMESPACE) apply -f charts/opentelemetry/collector.yaml
-	kubectl wait -n $(PROJECT_NAMESPACE) --for=condition=ready pod --selector=app.kubernetes.io/component=opentelemetry-collector --timeout=90s
+	kubectl -n observability apply -f charts/opentelemetry/collector.yaml
 	@echo
+	
 	@echo "#### Installing OpenTelemetry Instrumentation ####"
 	kubectl apply -f charts/opentelemetry/instrumentation.yaml
 	kubectl get instrumentation
 	@echo
+	
 	@echo "#### Installing OpenTelemetry Sidecar Collector ####"
 	kubectl apply -f charts/opentelemetry/sidecar-collector.yaml
 	kubectl get OpenTelemetryCollector sidecar-jaeger
 	@echo
 
+	@echo "#### Aceess Grafana ####"
+	@echo "Grafana Web: http://observability.platform.local" \
+		"\nUsuário: admin" \
+		"\nSenha: admin"
+
 deploy-applications: ## Implanta aplicações de exemplo
 	@echo "#### Installing App Python ####"
 	kubectl apply -f app/python/deployment.yaml
 	@echo
+
 	@echo "#### Installing App NodeJS ####"
 	kubectl apply -f app/nodes/deployment.yaml
 	@echo
+
 	@echo "#### Installing App Java ####"
 	kubectl apply -f app/java/deployment.yaml
 	@echo
+
+	@echo "#### Installing Cronjob ####"
+	kubectl apply -f app/job.yaml
 
 delete-applications: ## Exclui aplicações de exemplo
 	@echo "#### Deleting App Python ####"
@@ -134,3 +170,6 @@ delete-applications: ## Exclui aplicações de exemplo
 	@echo "#### Deleting App Java ####"
 	kubectl delete -f app/java/deployment.yaml
 	@echo
+	@echo "#### Deleting Cronjob ####"
+	kubectl delete -f app/job.yaml
+

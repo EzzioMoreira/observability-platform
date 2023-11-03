@@ -221,9 +221,48 @@ Saída:
 ```shell
 help                 "Ajuda"
 install-kind         "Instala kind"
-create-cluster       "Cria cluster Kind com balanceador, ingress-nginx, cert-manager e metrics-server"
-delete-cluster       "Exclui cluster Kind"
+create-cluster       "Cria cluster K8s com balanceador, ingress-nginx, cert-manager e metrics-server"
+configure-dns        "Configuração DNS"
+delete-cluster       "Exclui cluster Kubernetes"
 display-cluster      "Exibe informações do cluster"
 deploy-platform      "Implanta plataforma de observabilidade"
 deploy-applications  "Implanta aplicações de exemplo"
+delete-applications  "Exclui aplicações de exemplo"
 ```
+
+### Criar Cluster Kubernetes
+
+Execute o comando a seguir:
+
+```shell
+make create-cluster
+```
+
+> Em caso de erro execute o comando novamente.
+
+### Criar Plataforma de Observabilidade
+
+Execute o comando a seguir:
+
+```shell
+make deploy-platform
+```
+
+> Em caso de erro execute o comando novamente.
+
+### Criar Aplicações de Exemplo
+
+Execute o comando a seguir:
+
+```shell
+make deploy-applications 
+```
+
+> Em caso de erro execute o comando novamente.
+
+
+## Acessando Plataforma de Observabilidade
+
+- Link Grafana Web: http://observability.platform.local
+- Usuário: admin
+- Senha: admin

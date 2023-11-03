@@ -1,0 +1,27 @@
+---
+apiVersion: v1
+kind: Secret
+metadata:
+   name: tempo-storage
+type: Opaque
+stringData:
+   endpoint: http://minio.minio:9000
+   bucket: tempo
+   access_key_id: tempo
+   access_key_secret: supersecret
+---
+apiVersion: tempo.grafana.com/v1alpha1
+kind: TempoStack
+metadata:
+   name: grafana
+spec:
+   storage:
+     secret:
+        name: tempo-storage
+        type: s3
+   storageSize: 2Gi
+   resources:
+     total:
+       limits:
+         memory: 2Gi
+         cpu: 2000m

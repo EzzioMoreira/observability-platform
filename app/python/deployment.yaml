@@ -37,7 +37,7 @@ spec:
   selector:
     app: app-python
   ports:
-  - port: 80
+  - port: 8000
     targetPort: 8000
 ---
 apiVersion: networking.k8s.io/v1
@@ -45,13 +45,15 @@ kind: Ingress
 metadata:
   name: app-python-ingress
 spec:
+  ingressClassName: nginx
   rules:
-  - http:
+  - host: python.example.local
+    http:
       paths:
-      - path: /python
+      - path: /
         pathType: Prefix
         backend:
           service:
             name: app-python-service
             port:
-              number: 80
+              number: 8000

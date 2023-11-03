@@ -20,9 +20,9 @@ spec:
         timeout: 10s
     exporters:
       otlp:
-        endpoint: jaeger-collector:4317
+        endpoint: tempo-grafana-distributor.observability.svc.cluster.local:4317
         tls:
-          insecure: true
+         insecure: true
       # NOTE: Prior to v0.86.0 use `logging` instead of `debug`.
       debug:
 
@@ -46,6 +46,7 @@ kind: Ingress
 metadata:
   name: platform-collector-ingress
 spec:
+  ingressClassName: nginx
   rules:
   - host: observability.platform.local
     http:
@@ -56,11 +57,11 @@ spec:
           service:
             name: platform-collector
             port:
-              number: 80
+              number: 4318
       - path: /otel-grpc
         pathType: Prefix
         backend:
           service:
             name: platform-collector
             port:
-              number: 80
+              number: 4317
