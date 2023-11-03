@@ -238,7 +238,7 @@ Execute o comando a seguir:
 make create-cluster
 ```
 
-> Em caso de erro execute o comando novamente.
+> Em caso de erro, execute o comando novamente.
 
 ### Criar Plataforma de Observabilidade
 
@@ -248,7 +248,7 @@ Execute o comando a seguir:
 make deploy-platform
 ```
 
-> Em caso de erro execute o comando novamente.
+> Em caso de erro, execute o comando novamente.
 
 ### Criar Aplicações de Exemplo
 
@@ -258,7 +258,7 @@ Execute o comando a seguir:
 make deploy-applications 
 ```
 
-> Em caso de erro execute o comando novamente.
+> Em caso de erro, execute o comando novamente.
 
 
 ## Acessando Plataforma de Observabilidade
