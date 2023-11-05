@@ -1,0 +1,40 @@
+---
+apiVersion: monitoring.coreos.com/v1
+kind: Prometheus
+metadata:
+  name: main
+  namespace: observability
+spec:
+  version: v2.47.0
+  baseImage: quay.io/prometheus/prometheus
+  logLevel: info
+  serviceAccountName: prometheus-service-account
+  serviceMonitorSelector:
+    matchLabels:
+      prometheus: main
+  resources:
+    requests:
+      memory: 400Mi
+  enableAdminAPI: false
+  remoteWrite:
+  - url: "http://grafana-mimir-nginx.observability.svc:80/api/v1/push"
+---
+apiVersion: monitoring.coreos.com/v1
+kind: Prometheus
+metadata:
+  name: main
+  namespace: default
+spec:
+  version: v2.47.0
+  baseImage: quay.io/prometheus/prometheus
+  logLevel: info
+  serviceAccountName: prometheus-service-account
+  serviceMonitorSelector:
+    matchLabels:
+      prometheus: main
+  resources:
+    requests:
+      memory: 400Mi
+  enableAdminAPI: false
+  remoteWrite:
+  - url: "http://grafana-mimir-nginx.observability.svc:80/api/v1/push"

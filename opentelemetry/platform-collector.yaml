@@ -2,6 +2,8 @@ apiVersion: opentelemetry.io/v1alpha1
 kind: OpenTelemetryCollector
 metadata:
   name: platform
+  labels:
+    monitoring: prometheus
 spec:
   mode: "deployment"
   replicas: 2

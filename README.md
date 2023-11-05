@@ -279,3 +279,5 @@ sudo sysctl fs.inotify.max_user_instances=512
 ```
 
 [Referência: Erros de pod devido a “muitos arquivos abertos”](https://kind.sigs.k8s.io/docs/user/known-issues/#pod-errors-due-to-too-many-open-files)
+
+kubectl create -f https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/main/bundle.yaml

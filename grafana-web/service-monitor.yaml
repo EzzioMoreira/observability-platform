@@ -1,0 +1,13 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: grafana-operator
+  namespace: observability
+  labels:
+    prometheus: main
+spec:
+  endpoints:
+  - port: metrics
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: grafana-operator
