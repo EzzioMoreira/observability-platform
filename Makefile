@@ -97,7 +97,7 @@ deploy-platform: ## Implanta plataforma de observabilidade
 	@echo
 
 	@echo "#### Installing Minio S3 ####"
-	kubectl apply -f charts/minio/minio.yaml
+	kubectl apply -f minio/minio.yaml
 	@echo
 
 	@echo "#### Installing Grafana Operator ####"
@@ -106,18 +106,22 @@ deploy-platform: ## Implanta plataforma de observabilidade
 	@echo
 
 	@echo "#### Deploying Grafana Web ####"
-	kubectl -n observability apply -f charts/grafana/grafana.yaml
+	kubectl -n observability apply -f grafana-web/grafana.yaml
 	kubectl wait -n observability --for=condition=ready pod --selector=app=grafana --timeout=120s
-	kubectl -n observability apply -f charts/grafana/datasource.yaml
+	kubectl -n observability apply -f grafana-web/datasource.yaml
 	@echo
 
-	@echo "#### Installing Tempo Operator ####"
+	@echo "#### Installing Grafana Tempo Operator ####"
 	kubectl apply -f https://github.com/grafana/tempo-operator/releases/latest/download/tempo-operator.yaml
 	kubectl wait -n tempo-operator-system --for=condition=ready pod --selector=app.kubernetes.io/name=tempo-operator --timeout=120s
 	@echo
 
-	@echo "#### Installing Tempo ####"
-	kubectl -n observability apply -f charts/tempo/tempo.yaml
+	@echo "#### Installing Grafana Tempo ####"
+	kubectl -n observability apply -f grafana-tempo/tempo.yaml
+	@echo
+
+	@echo "#### Installing Grafana Mimir ####"
+	helm upgrade --install --wait --create-namespace --namespace observability -f grafana-mimir/values.yaml grafana-mimir grafana/mimir-distributed
 	@echo
 
 	@echo "#### Installing OpenTelemetry Operator ####"
@@ -125,18 +129,27 @@ deploy-platform: ## Implanta plataforma de observabilidade
 	kubectl wait -n opentelemetry-operator-system --for=condition=ready pod --selector=app.kubernetes.io/name=opentelemetry-operator --timeout=120s
 	@echo
 	
-	@echo "#### Installing OpenTelemetry Collector ####"
-	kubectl -n observability apply -f charts/opentelemetry/collector.yaml
+	@echo "#### Installing Platform OpenTelemetry Collector ####"
+	kubectl -n observability apply -f opentelemetry/platform-collector.yaml
 	@echo
 	
 	@echo "#### Installing OpenTelemetry Instrumentation ####"
-	kubectl apply -f charts/opentelemetry/instrumentation.yaml
+	kubectl apply -f opentelemetry/instrumentation.yaml
 	kubectl get instrumentation
 	@echo
 	
 	@echo "#### Installing OpenTelemetry Sidecar Collector ####"
-	kubectl apply -f charts/opentelemetry/sidecar-collector.yaml
+	kubectl apply -f opentelemetry/sidecar-collector.yaml
 	kubectl get OpenTelemetryCollector sidecar-jaeger
+	@echo
+
+	@echo "#### Installing OpenTelemetry Agent Collector ####"
+	helm repo add open-telemetry https://open-telemetry.github.io/opentelemetry-helm-charts
+	@echo
+
+	@echo "#### Installing OpenTelemetry Agent Collector ####"
+	kubectl apply -f opentelemetry/agent-collector-rbac.yaml
+	kubectl apply -f opentelemetry/agent-collector.yaml
 	@echo
 
 	@echo "#### Aceess Grafana ####"
@@ -172,4 +185,3 @@ delete-applications: ## Exclui aplicações de exemplo
 	@echo
 	@echo "#### Deleting Cronjob ####"
 	kubectl delete -f app/job.yaml
-

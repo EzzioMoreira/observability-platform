@@ -1,0 +1,37 @@
+grafana-mimir:
+  
+  nameOverride: "grafana-mimir"
+  fullnameOverride: "grafana-mimir"
+
+  enabled: true
+  nginx:
+    enabled: false
+  alertmanager:
+    enabled: false
+  ruler:
+    enabled: false
+  querier:
+    replicas: 1
+  ingester:
+    replicas: 3
+    zoneAwareReplication:
+      enabled: false
+    persistentVolume:
+      enabled: false
+  store_gateway:
+    zoneAwareReplication:
+      enabled: false
+    persistentVolume:
+      enabled: false
+  query_scheduler:
+    replicas: 1
+  compactor:
+    persistentVolume:
+      enabled: false
+  distributor:
+    replicas: 2
+
+  minio:
+    enabled: true
+    persistence:
+      enabled: false

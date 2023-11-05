@@ -266,3 +266,16 @@ make deploy-applications
 - Link Grafana Web: http://observability.platform.local
 - Usuário: admin
 - Senha: admin
+
+## Erros Conhecidos
+
+Erro: `failed to create fsnotify watcher: too many open files`, ocorre quando o OpenTelemetry Collector não consegue criar um observador de sistema de arquivos (fsnotify) devido a um limite de arquivos abertos excedido. Para resolver esse problema, você precisa ajustar os recursos do sistema operacional para permitir um número maior de arquivos abertos.
+
+Execute o comando a seguir
+
+```shell
+sudo sysctl fs.inotify.max_user_watches=524288
+sudo sysctl fs.inotify.max_user_instances=512
+```
+
+[Referência: Erros de pod devido a “muitos arquivos abertos”](https://kind.sigs.k8s.io/docs/user/known-issues/#pod-errors-due-to-too-many-open-files)
