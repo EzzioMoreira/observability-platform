@@ -100,9 +100,23 @@ deploy-platform: ## Implanta plataforma de observabilidade
 	kubectl apply -f minio/minio.yaml
 	@echo
 
+	#@echo "#### Installing Prometheus Operator ####"
+	#kubectl create -f prometheus/prometheus-operator.yaml
+	#kubectl wait --for=condition=ready pod --selector=app.kubernetes.io/name=prometheus-operator --timeout=120s
+	
+	@echo "#### Prometheus RBAC ####"
+	kubectl apply -f prometheus/prometheus-rbac.yaml
+
+	@echo "#### Prometheus ####"
+	kubectl apply -f prometheus/prometheus.yaml
+	@echo
+
 	@echo "#### Installing Grafana Operator ####"
 	helm upgrade --install --wait --create-namespace --namespace observability grafana-operator oci://ghcr.io/grafana-operator/helm-charts/grafana-operator --version v5.4.2
 	kubectl wait -n observability --for=condition=ready pod --selector=app.kubernetes.io/instance=grafana-operator --timeout=120s
+	
+	@echo "#### Grafana Monitorin with Prometheus ####"
+	kubectl apply -f grafana-web/service-monitor.yaml
 	@echo
 
 	@echo "#### Deploying Grafana Web ####"
@@ -131,6 +145,8 @@ deploy-platform: ## Implanta plataforma de observabilidade
 	
 	@echo "#### Installing Platform OpenTelemetry Collector ####"
 	kubectl -n observability apply -f opentelemetry/platform-collector.yaml
+	@echo "#### OpenTelemetry Monitoring with Prometheus ####"
+	kubectl apply -f opentelemetry/service-monitor.yaml 
 	@echo
 	
 	@echo "#### Installing OpenTelemetry Instrumentation ####"
@@ -141,10 +157,6 @@ deploy-platform: ## Implanta plataforma de observabilidade
 	@echo "#### Installing OpenTelemetry Sidecar Collector ####"
 	kubectl apply -f opentelemetry/sidecar-collector.yaml
 	kubectl get OpenTelemetryCollector sidecar-jaeger
-	@echo
-
-	@echo "#### Installing OpenTelemetry Agent Collector ####"
-	helm repo add open-telemetry https://open-telemetry.github.io/opentelemetry-helm-charts
 	@echo
 
 	@echo "#### Installing OpenTelemetry Agent Collector ####"
@@ -170,8 +182,12 @@ deploy-applications: ## Implanta aplicações de exemplo
 	kubectl apply -f app/java/deployment.yaml
 	@echo
 
-	@echo "#### Installing Cronjob ####"
-	kubectl apply -f app/job.yaml
+	@echo "#### Installing Trace Generator ####"
+	kubectl apply -f app/app-trace-generate/app-trace-generate.yaml
+
+	@echo "#### Installing Metric Generator ####"
+	kubectl apply -f app/app-metric-generate/app-metric-generate.yaml
+	kubectl apply -f app/app-metric-generate/service-monitor.yaml
 
 delete-applications: ## Exclui aplicações de exemplo
 	@echo "#### Deleting App Python ####"
