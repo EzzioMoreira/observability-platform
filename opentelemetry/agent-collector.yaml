@@ -21,6 +21,12 @@ spec:
       valueFrom:
         fieldRef:
           fieldPath: spec.nodeName
+    - name: POD_IP
+      valueFrom:
+        fieldRef:
+          fieldPath: status.podIP
+    - name: OTEL_SERVICE_NAME
+      value: "platform-agent"
   tolerations:
   - key: "node-role.kubernetes.io/control-plane"
     operator: "Exists"
@@ -31,9 +37,13 @@ spec:
         config:
           scrape_configs:
           - job_name: otel-collector-metrics
-            scrape_interval: 10s
+            scrape_interval: 30s
             static_configs:
-            - targets: ['localhost:8888']
+            - targets: ['${env:POD_IP}:8888']
+          - job_name: 'grafana-operator'
+            scrape_interval: 30s
+            static_configs:
+            - targets: ['grafana-operator-metrics-service.observability.svc:9090']
       
       hostmetrics:
         root_path: /hostfs
@@ -47,15 +57,15 @@ spec:
           network:
       
       k8s_cluster:
-        collection_interval: 10s
+        collection_interval: 20s
         node_conditions_to_report: 
           - Ready
           - MemoryPressure
-          - DiskPressure
-          - NetworkUnavailable
         allocatable_types_to_report: 
           - cpu
-          - memory,storage
+          - memory
+          - ephemeral-storage
+          - storage
       
       kubeletstats:
         collection_interval: 10s
@@ -152,4 +162,4 @@ spec:
         metrics:
           receivers: [prometheus, hostmetrics, k8s_cluster, receiver_creator]
           processors: [memory_limiter, metricstransform, k8sattributes, resourcedetection/k8snode, batch]
-          exporters: [debug, prometheusremotewrite]
+          exporters: [prometheusremotewrite]
