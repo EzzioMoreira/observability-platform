@@ -100,9 +100,9 @@ deploy-platform: ## Implanta plataforma de observabilidade
 	kubectl apply -f minio/minio.yaml
 	@echo
 
-	#@echo "#### Installing Prometheus Operator ####"
-	#kubectl create -f prometheus/prometheus-operator.yaml
-	#kubectl wait --for=condition=ready pod --selector=app.kubernetes.io/name=prometheus-operator --timeout=120s
+	@echo "#### Installing Prometheus Operator ####"
+	kubectl create -f prometheus/prometheus-operator.yaml
+	kubectl wait --for=condition=ready pod --selector=app.kubernetes.io/name=prometheus-operator --timeout=120s
 	
 	@echo "#### Prometheus RBAC ####"
 	kubectl apply -f prometheus/prometheus-rbac.yaml
