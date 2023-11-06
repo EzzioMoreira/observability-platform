@@ -148,7 +148,6 @@ deploy-platform: ## Implanta plataforma de observabilidade
 	@echo "#### Installing Platform OpenTelemetry Collector ####"
 	kubectl -n observability apply -f opentelemetry/platform-collector.yaml
 	@echo "#### OpenTelemetry Monitoring with Prometheus ####"
-	kubectl apply -f opentelemetry/service-monitor.yaml 
 	@echo
 	
 	@echo "#### Installing OpenTelemetry Instrumentation ####"
@@ -189,7 +188,6 @@ deploy-applications: ## Implanta aplicações de exemplo
 
 	@echo "#### Installing Metric Generator ####"
 	kubectl apply -f app/app-metric-generate/app-metric-generate.yaml
-	kubectl apply -f app/app-metric-generate/service-monitor.yaml
 
 delete-applications: ## Exclui aplicações de exemplo
 	@echo "#### Deleting App Python ####"
