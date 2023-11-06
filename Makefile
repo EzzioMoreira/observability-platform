@@ -100,23 +100,25 @@ deploy-platform: ## Implanta plataforma de observabilidade
 	kubectl apply -f minio/minio.yaml
 	@echo
 
-	@echo "#### Installing Prometheus Operator ####"
-	kubectl create -f prometheus/prometheus-operator.yaml
-	kubectl wait --for=condition=ready pod --selector=app.kubernetes.io/name=prometheus-operator --timeout=120s
+	# @echo "#### Installing Prometheus Operator ####"
+	# helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+	# helm upgrade --install --wait --create-namespace --namespace observability prometheus-operator prometheus-community/prometheus-operator-crds
+	# kubectl wait --for=condition=ready pod --selector=app.kubernetes.io/name=prometheus-operator --timeout=120s
 	
-	@echo "#### Prometheus RBAC ####"
-	kubectl apply -f prometheus/prometheus-rbac.yaml
+	# @echo "#### Prometheus RBAC ####"
+	# kubectl apply -f prometheus/prometheus-rbac.yaml
 
-	@echo "#### Prometheus ####"
-	kubectl apply -f prometheus/prometheus.yaml
-	@echo
+	# @echo "#### Prometheus ####"
+	# kubectl apply -f prometheus/prometheus.yaml
+	# @echo
+
+	# @echo "#### Grafana Monitorin with Prometheus ####"
+    # kubectl apply -f grafana-web/service-monitor.yaml
+    # @echo
 
 	@echo "#### Installing Grafana Operator ####"
 	helm upgrade --install --wait --create-namespace --namespace observability grafana-operator oci://ghcr.io/grafana-operator/helm-charts/grafana-operator --version v5.4.2
 	kubectl wait -n observability --for=condition=ready pod --selector=app.kubernetes.io/instance=grafana-operator --timeout=120s
-	
-	@echo "#### Grafana Monitorin with Prometheus ####"
-	kubectl apply -f grafana-web/service-monitor.yaml
 	@echo
 
 	@echo "#### Deploying Grafana Web ####"
@@ -160,8 +162,8 @@ deploy-platform: ## Implanta plataforma de observabilidade
 	@echo
 
 	@echo "#### Installing OpenTelemetry Agent Collector ####"
-	kubectl apply -f opentelemetry/agent-collector-rbac.yaml
-	kubectl apply -f opentelemetry/agent-collector.yaml
+	kubectl apply -f opentelemetry/platform-agent-collector-rbac.yaml
+	kubectl apply -f opentelemetry/platform-agent-collector.yaml
 	@echo
 
 	@echo "#### Aceess Grafana ####"

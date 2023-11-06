@@ -2,11 +2,20 @@ apiVersion: opentelemetry.io/v1alpha1
 kind: OpenTelemetryCollector
 metadata:
   name: platform
+  namespace: observability
   labels:
     monitoring: prometheus
 spec:
+  image: otel/opentelemetry-collector-contrib:latest
   mode: "deployment"
-  replicas: 2
+  hostNetwork: true
+  replicas: 1
+  serviceAccount: platform-agent
+  env:
+    - name: POD_IP
+      valueFrom:
+        fieldRef:
+          fieldPath: status.podIP
   tolerations:
   - key: "node-role.kubernetes.io/control-plane"
     operator: "Exists"
@@ -17,6 +26,14 @@ spec:
         protocols:
           grpc:
           http:
+      prometheus:
+        config:
+          scrape_configs:
+          - job_name: otel-collector-metrics
+            scrape_interval: 30s
+            static_configs:
+            - targets: ['${env:POD_IP}:8888']
+
     processors:
       memory_limiter:
         check_interval: 1s
@@ -64,20 +81,21 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: platform-collector-ingress
+  namespace: observability
 spec:
   ingressClassName: nginx
   rules:
   - host: collector.observability.platform.local
     http:
       paths:
-      - path: /otel-http
+      - path: /v1/traces
         pathType: Prefix
         backend:
           service:
             name: platform-collector
             port:
               number: 4318
-      - path: /otel-grpc
+      - path: /v1/traces
         pathType: Prefix
         backend:
           service:
