@@ -25,7 +25,6 @@ spec:
     server:
       root_url: "http://observability.platform.local/"
       domain: observability.platform.local
-      #serve_from_sub_path: true
     log:
       mode: "console"
     auth:

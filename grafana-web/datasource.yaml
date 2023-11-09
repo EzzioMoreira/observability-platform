@@ -1,17 +1,38 @@
 apiVersion: grafana.integreatly.org/v1beta1
 kind: GrafanaDatasource
 metadata:
-  name: grafanadatasource
+  name: grafana-tempo
 spec:
   datasource:
     access: proxy
     type: tempo
     isDefault: true
     jsonData:
-      timeInterval: 5s
+      timeInterval: 10s
       tlsSkipVerify: false
     name: Tempo
     url: http://tempo-grafana-query-frontend.observability.svc.cluster.local:3200
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana
+  plugins:
+    - name: grafana-clock-panel
+      version: 1.3.0
+---
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDatasource
+metadata:
+  name: grafana-mimir
+spec:
+  datasource:
+    access: proxy
+    type: prometheus
+    isDefault: true
+    jsonData:
+      timeInterval: 10s
+      tlsSkipVerify: false
+    name: prometheus
+    url: http://grafana-mimir-nginx.observability.svc:80/prometheus
   instanceSelector:
     matchLabels:
       dashboards: grafana

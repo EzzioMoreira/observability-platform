@@ -4,7 +4,7 @@ metadata:
   name: python-instrumentation
 spec:
   exporter:
-    endpoint: http://platform-collector.observability.svc.cluster.local:4318
+    endpoint: http://platform-agent-collector.observability.svc.cluster.local:4318
   propagators:
     - tracecontext
     - baggage
@@ -22,7 +22,7 @@ metadata:
   name: node-instrumentation
 spec:
   exporter:
-    endpoint: http://platform-collector.observability.svc.cluster.local:4317
+    endpoint: http://platform-agent-collector.observability.svc.cluster.local:4317
   propagators:
     - tracecontext
     - baggage

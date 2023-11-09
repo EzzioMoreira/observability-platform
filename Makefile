@@ -125,6 +125,8 @@ deploy-platform: ## Implanta plataforma de observabilidade
 	kubectl -n observability apply -f grafana-web/grafana.yaml
 	kubectl wait -n observability --for=condition=ready pod --selector=app=grafana --timeout=120s
 	kubectl -n observability apply -f grafana-web/datasource.yaml
+	kubectl -n observability apply -f grafana-web/dashboard/dashboard.yaml
+	kubectl -n observability apply -f grafana-web/dashboard/opentelemetry-collector-dashboard.yaml
 	@echo
 
 	@echo "#### Installing Grafana Tempo Operator ####"
@@ -138,16 +140,12 @@ deploy-platform: ## Implanta plataforma de observabilidade
 
 	@echo "#### Installing Grafana Mimir ####"
 	helm upgrade --install --wait --create-namespace --namespace observability -f grafana-mimir/values.yaml grafana-mimir grafana/mimir-distributed
+	kubectl wait -n observability --for=condition=ready pod --selector=app.kubernetes.io/name=mimir --timeout=160s
 	@echo
 
 	@echo "#### Installing OpenTelemetry Operator ####"
 	kubectl apply -f https://github.com/open-telemetry/opentelemetry-operator/releases/latest/download/opentelemetry-operator.yaml
 	kubectl wait -n opentelemetry-operator-system --for=condition=ready pod --selector=app.kubernetes.io/name=opentelemetry-operator --timeout=120s
-	@echo
-	
-	@echo "#### Installing Platform OpenTelemetry Collector ####"
-	kubectl -n observability apply -f opentelemetry/platform-collector.yaml
-	@echo "#### OpenTelemetry Monitoring with Prometheus ####"
 	@echo
 	
 	@echo "#### Installing OpenTelemetry Instrumentation ####"
@@ -171,33 +169,16 @@ deploy-platform: ## Implanta plataforma de observabilidade
 		"\nSenha: admin"
 
 deploy-applications: ## Implanta aplicações de exemplo
-	@echo "#### Installing App Python ####"
-	kubectl apply -f app/python/deployment.yaml
-	@echo
-
-	@echo "#### Installing App NodeJS ####"
-	kubectl apply -f app/nodes/deployment.yaml
-	@echo
-
-	@echo "#### Installing App Java ####"
-	kubectl apply -f app/java/deployment.yaml
-	@echo
-
-	@echo "#### Installing Trace Generator ####"
+	@echo "#### Installing App Trace Generator ####"
 	kubectl apply -f app/app-trace-generate/app-trace-generate.yaml
+	@echo
 
 	@echo "#### Installing Metric Generator ####"
 	kubectl apply -f app/app-metric-generate/app-metric-generate.yaml
 
 delete-applications: ## Exclui aplicações de exemplo
-	@echo "#### Deleting App Python ####"
-	kubectl delete -f app/python/deployment.yaml
+	@echo "#### Deleting App Trace Generator ####"
+	kubectl delete -f app/app-trace-generate/app-trace-generate.yaml
 	@echo
-	@echo "#### Deleting App NodeJS ####"
-	kubectl delete -f app/nodes/deployment.yaml
-	@echo
-	@echo "#### Deleting App Java ####"
-	kubectl delete -f app/java/deployment.yaml
-	@echo
-	@echo "#### Deleting Cronjob ####"
-	kubectl delete -f app/job.yaml
+	@echo "#### Deleting App Metric Generator ####"
+	kubectl delete -f app/app-metric-generate/app-metric-generate.yaml

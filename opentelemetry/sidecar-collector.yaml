@@ -9,11 +9,12 @@ spec:
       jaeger:
         protocols:
           thrift_compact:
+    
     processors:
 
     exporters:
       otlp:
-        endpoint: http://platform-collector.observability.svc.cluster.local:4317
+        endpoint: http://platform-agent-collector.observability.svc.cluster.local:4317
 
     service:
       pipelines:

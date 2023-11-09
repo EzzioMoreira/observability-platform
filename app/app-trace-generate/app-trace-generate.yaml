@@ -11,4 +11,4 @@ spec:
         image: ghcr.io/grafana/xk6-client-tracing:v0.0.2
         env:
         - name: ENDPOINT
-          value: platform-collector.observability.svc.cluster.local:4317
+          value: platform-agent-collector.observability.svc.cluster.local:4317

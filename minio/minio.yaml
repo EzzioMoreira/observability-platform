@@ -35,24 +35,28 @@ spec:
         monitoring: prometheus
     spec:
       containers:
-        - command:
-            - /bin/sh
-            - -c
-            - |
-              mkdir -p /storage/tempo && \
-              minio server /storage
-          env:
-            - name: MINIO_ACCESS_KEY
-              value: tempo
-            - name: MINIO_SECRET_KEY
-              value: supersecret
-          image: minio/minio
-          name: minio
-          ports:
-            - containerPort: 9000
-          volumeMounts:
-            - mountPath: /storage
-              name: storage
+      - command:
+          - /bin/sh
+          - -c
+          - |
+            mkdir -p /storage/tempo && \
+            minio server /storage
+        env:
+          - name: MINIO_ACCESS_KEY
+            value: tempo
+          - name: MINIO_SECRET_KEY
+            value: supersecret
+        image: minio/minio
+        name: minio
+        ports:
+          - containerPort: 9000
+        volumeMounts:
+          - mountPath: /storage
+            name: storage
+      tolerations:
+      - key: "node-role.kubernetes.io/control-plane"
+        operator: "Exists"
+        effect: "NoSchedule"
       volumes:
         - name: storage
           persistentVolumeClaim:
