@@ -1,0 +1,452 @@
+apiVersion: opentelemetry.io/v1alpha1
+kind: OpenTelemetryCollector
+metadata:
+  name: platform-agent
+  namespace: observability
+  labels:
+    monitoring: prometheus
+spec:
+  image: otel/opentelemetry-collector-contrib-dev:latest
+  mode: "daemonset"
+  serviceAccount: platform-agent
+  hostNetwork: true
+  env:
+    - name: KUBE_NODE_NAME
+      valueFrom:
+        fieldRef:
+          apiVersion: v1
+          fieldPath: status.hostIP
+    - name: POD_IP
+      valueFrom:
+        fieldRef:
+          fieldPath: status.podIP
+    - name: OTEL_SERVICE_NAME
+      value: "platform-agent"
+    - name: TOKEN
+      valueFrom:
+        secretKeyRef:
+          name: grafana-secret
+          key: token
+  volumeMounts:
+    - mountPath: /var/log/pods
+      name: varlogpods
+      readOnly: true
+    - mountPath: /var/lib/docker/containers
+      name: varlibdockercontainers
+      readOnly: true
+    - mountPath: /hostfs
+      mountPropagation: HostToContainer
+      name: hostfs
+      readOnly: true
+  volumes:
+    - name: varlogpods
+      hostPath:
+        path: /var/log/pods
+    - name: varlibdockercontainers
+      hostPath:
+        path: /var/lib/docker/containers
+    - name: hostfs
+      hostPath:
+        path: /
+  tolerations:
+  - key: "node-role.kubernetes.io/control-plane"
+    operator: "Exists"
+    effect: "NoSchedule"
+  config: |
+    receivers:
+      filelog:
+        exclude:
+        - /var/log/pods/*platform-agent-collector*_*/opentelemetry-collector/*.log
+        include:
+        - /var/log/pods/*/*/*.log
+        include_file_name: false
+        include_file_path: true
+        operators:
+        - id: get-format
+          routes:
+          - expr: body matches "^\\{"
+            output: parser-docker
+          - expr: body matches "^[^ Z]+ "
+            output: parser-crio
+          - expr: body matches "^[^ Z]+Z"
+            output: parser-containerd
+          type: router
+        - id: parser-crio
+          regex: ^(?P<time>[^ Z]+) (?P<stream>stdout|stderr) (?P<logtag>[^ ]*) ?(?P<log>.*)$
+          timestamp:
+            layout: 2006-01-02T15:04:05.999999999Z07:00
+            layout_type: gotime
+            parse_from: attributes.time
+          type: regex_parser
+        - combine_field: attributes.log
+          combine_with: ""
+          id: crio-recombine
+          is_last_entry: attributes.logtag == 'F'
+          max_log_size: 102400
+          output: extract_metadata_from_filepath
+          source_identifier: attributes["log.file.path"]
+          type: recombine
+        - id: parser-containerd
+          regex: ^(?P<time>[^ ^Z]+Z) (?P<stream>stdout|stderr) (?P<logtag>[^ ]*) ?(?P<log>.*)$
+          timestamp:
+            layout: '%Y-%m-%dT%H:%M:%S.%LZ'
+            parse_from: attributes.time
+          type: regex_parser
+        - combine_field: attributes.log
+          combine_with: ""
+          id: containerd-recombine
+          is_last_entry: attributes.logtag == 'F'
+          max_log_size: 102400
+          output: extract_metadata_from_filepath
+          source_identifier: attributes["log.file.path"]
+          type: recombine
+        - id: parser-docker
+          output: extract_metadata_from_filepath
+          timestamp:
+            layout: '%Y-%m-%dT%H:%M:%S.%LZ'
+            parse_from: attributes.time
+          type: json_parser
+        - id: extract_metadata_from_filepath
+          parse_from: attributes["log.file.path"]
+          regex: ^.*\/(?P<namespace>[^_]+)_(?P<pod_name>[^_]+)_(?P<uid>[a-f0-9\-]+)\/(?P<container_name>[^\._]+)\/(?P<restart_count>\d+)\.log$
+          type: regex_parser
+        - from: attributes.stream
+          to: attributes["log.iostream"]
+          type: move
+        - from: attributes.container_name
+          to: resource["k8s.container.name"]
+          type: move
+        - from: attributes.namespace
+          to: resource["k8s.namespace.name"]
+          type: move
+        - from: attributes.pod_name
+          to: resource["k8s.pod.name"]
+          type: move
+        - from: attributes.restart_count
+          to: resource["k8s.container.restart_count"]
+          type: move
+        - from: attributes.uid
+          to: resource["k8s.pod.uid"]
+          type: move
+        - from: attributes.log
+          to: body
+          type: move
+        start_at: end
+
+      otlp:
+        protocols:
+          grpc:
+          http:
+      
+      prometheus:
+        config:
+          scrape_configs:
+          - job_name: otel-collector-metrics
+            scrape_interval: 30s
+            static_configs:
+              - targets: ['${env:POD_IP}:8888']
+          - job_name: app-example
+            scrape_interval: 30s
+            static_configs:
+              - targets: ['0.0.0.0:8080']
+      
+      k8s_cluster:
+        collection_interval: 20s
+        node_conditions_to_report: 
+          - Ready
+          - MemoryPressure
+        allocatable_types_to_report: 
+          - cpu
+          - memory
+          - ephemeral-storage
+          - storage
+      
+      k8s_events:
+        auth_type : serviceAccount
+      
+      receiver_creator:
+        watch_observers: [k8s_observer]
+        receivers:
+          redis:
+            rule: type == "port" && pod.name matches "redis"
+            config:
+              password: '`pod.labels["SECRET"]`'
+          kubeletstats:
+            rule: type == "k8s.node"
+            config:
+              auth_type: serviceAccount
+              collection_interval: 10s
+              endpoint: ${env:KUBE_NODE_NAME}:10250
+              extra_metadata_labels:
+                - container.id
+              metric_groups:
+                - container
+                - pod
+                - node
+      
+      kubeletstats:
+        auth_type: serviceAccount
+        collection_interval: 20s
+        endpoint: ${env:KUBE_NODE_NAME}:10250
+        insecure_skip_verify: true
+
+      hostmetrics:
+        collection_interval: 20s
+        root_path: /hostfs
+        scrapers:
+          cpu:
+          disk:
+          load:
+          memory:
+          network:
+          filesystem:
+            exclude_fs_types:
+              fs_types:
+              - autofs
+              - binfmt_misc
+              - bpf
+              - cgroup2
+              - configfs
+              - debugfs
+              - devpts
+              - devtmpfs
+              - fusectl
+              - hugetlbfs
+              - iso9660
+              - mqueue
+              - nsfs
+              - overlay
+              - proc
+              - procfs
+              - pstore
+              - rpc_pipefs
+              - securityfs
+              - selinuxfs
+              - squashfs
+              - sysfs
+              - tracefs
+              match_type: strict
+            exclude_mount_points:
+              match_type: regexp
+              mount_points:
+              - /dev/*
+              - /proc/*
+              - /sys/*
+              - /run/k3s/containerd/*
+              - /var/lib/docker/*
+              - /var/lib/kubelet/*
+              - /snap/*
+
+    processors:
+      batch:
+        send_batch_max_size: 1000
+        timeout: 30s
+        send_batch_size : 800
+      
+      memory_limiter:
+        check_interval: 1s
+        limit_percentage: 70
+        spike_limit_percentage: 30
+      
+      attributes:
+        actions:
+        - action: insert
+          from_attribute: pod
+          key: k8s.pod.name
+        - action: insert
+          from_attribute: pod_ip
+          key: k8s.pod.ip
+        - action: insert
+          from_attribute: namespace
+          key: k8s.namespace.name
+
+      groupbyattrs:
+        keys:
+        - k8s.cluster.name
+        - k8s.pod.ip
+        - k8s.pod.name
+        - k8s.namespace.name
+      
+      ## k8sattributes processor to get the metadata from K8s# k8sattributes processor to get the metadata from K8s
+      k8sattributes:
+        auth_type: 'serviceAccount'
+        extract:
+          annotations:
+          - tag_name: $$1
+            key_regex: (.*)
+          labels:
+          - tag_name: $$1
+            key_regex: (.*)
+          #- from: pod
+          #  key_regex: (.*)
+          #  tag_name: $$1
+          metadata:
+          - k8s.namespace.name
+          - k8s.deployment.name
+          - k8s.statefulset.name
+          - k8s.daemonset.name
+          - k8s.cronjob.name
+          - k8s.job.name
+          - k8s.node.name
+          - k8s.pod.name
+          - k8s.pod.uid
+          - k8s.pod.start_time
+        filter:
+          node_from_env_var: KUBE_NODE_NAME
+        passthrough: false
+        pod_association:
+          - sources:
+            - from: resource_attribute
+              name: k8s.pod.ip
+          - sources:
+            - from: resource_attribute
+              name: k8s.pod.name
+            - from: resource_attribute
+              name: k8s.namespace.name
+
+      resource:
+        attributes:
+        - key: k8s.cluster.name
+          from_attribute: k8s.cluster.name
+          action: insert
+        - action: insert
+          from_attribute: k8s.pod.ip
+          key: pod_ip
+        - action: insert
+          from_attribute: k8s.pod.name
+          key: pod
+        - action: insert
+          from_attribute: k8s.namespace.name
+          key: namespace
+        - action: insert
+          from_attribute: k8s.pod.start_time
+          key: start_time
+        - action: insert
+          from_attribute: k8s.pod.uid
+          key: pod_uid
+        - action: insert
+          key: platform
+          value: k8s
+        - action: insert
+          key: service_component
+          value: centralinfrastructure
+        - action: insert
+          key: loki.tenant
+          value: service_component
+        - action: insert
+          key: loki.resource.labels
+          value: namespace, platform, pod, pod_ip, pod_uid, service_component, start_time
+        - action: insert
+          key: loki.format
+          value: json
+
+    extensions:
+      memory_ballast:
+        size_in_percentage: 20
+      basicauth/grafana-mimir:
+        client_auth:
+          username: 1223770
+          password: ${env:TOKEN}
+
+      basicauth/grafana-tempo:
+        client_auth:
+          username: 710064
+          password: ${env:TOKEN}
+
+      basicauth/grafana-loki:
+        client_auth: 
+          username: 710960
+          password: ${env:TOKEN}
+      
+      k8s_observer:
+        auth_type: serviceAccount
+        node: ${env:KUBE_NODE_NAME}
+        observe_pods: true
+        observe_nodes: true
+
+    exporters:
+      otlp:
+        endpoint: tempo-prod-04-prod-us-east-0.grafana.net:443
+        tls:
+          insecure: false
+        auth:
+          authenticator: basicauth/grafana-tempo
+        sending_queue:
+          num_consumers: 4
+          queue_size: 100
+        retry_on_failure:
+          enabled: true
+      
+      prometheusremotewrite:
+        endpoint: https://prometheus-prod-13-prod-us-east-0.grafana.net/api/prom/push
+        tls: 
+          insecure: false
+        auth:
+          authenticator: basicauth/grafana-mimir
+      
+      loki: 
+        endpoint: https://logs-prod-006.grafana.net/loki/api/v1/push
+        tls:
+          insecure: false
+        auth:
+          authenticator: basicauth/grafana-loki
+
+      # NOTE: Prior to v0.86.0 use `logging` instead of `debug`
+      debug:
+        verbosity: detailed
+    
+    connectors:
+      spanmetrics:
+        namespace: span.metrics
+
+    service:
+      telemetry:
+        logs:
+          level: "info"
+      extensions: 
+      - basicauth/grafana-mimir
+      - basicauth/grafana-tempo
+      - basicauth/grafana-loki
+      pipelines:
+        traces:
+          receivers: 
+          - otlp
+          processors:
+          - resource
+          - k8sattributes
+          - attributes
+          - groupbyattrs
+          - memory_limiter
+          - batch
+          exporters: 
+          - otlp
+          - spanmetrics
+        metrics:
+          receivers: 
+          - prometheus
+          - otlp
+          - spanmetrics
+          - kubeletstats
+          - hostmetrics
+          processors:
+          - resource
+          - k8sattributes
+          - attributes
+          - groupbyattrs
+          - memory_limiter
+          - batch
+          exporters:
+          - prometheusremotewrite
+        logs:
+          receivers:
+          - filelog
+          - k8s_events
+          processors:
+          - resource
+          - k8sattributes
+          - attributes
+          - groupbyattrs
+          - memory_limiter
+          - batch
+          exporters: 
+          - loki

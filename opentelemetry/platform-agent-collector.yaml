@@ -108,13 +108,13 @@ spec:
       
       metricstransform:
         transforms:
-           include: .+
-           match_type: regexp
-           action: update
-           operations:
-             - action: add_label
-               new_label: kubernetes.name
-               new_value: kind-observability-platform
+          include: .+ # Note: '.' corresponde a qualquer caractere individual e '+' garante que pelo menos um caractere esteja presente
+          match_type: regexp
+          action: update
+          operations:
+            - action: add_label
+              new_label: k8s.cluster_name
+              new_value: kind-observability-platform
 
       resourcedetection/k8snode:
         detectors: [k8snode]
