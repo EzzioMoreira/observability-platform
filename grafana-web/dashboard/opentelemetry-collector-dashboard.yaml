@@ -44,7 +44,7 @@ spec:
           "collapsed": false,
           "datasource": {
             "type": "prometheus",
-            "uid": "EQ64ugc4z"
+            "uid": "${datasource}"
           },
           "gridPos": {
             "h": 1,
@@ -58,7 +58,7 @@ spec:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "EQ64ugc4z"
+                "uid": "${datasource}"
               },
               "refId": "A"
             }
@@ -69,7 +69,7 @@ spec:
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "777bf608-9a28-4d0d-9673-aa24237d3588"
+            "uid": "${datasource}"
           },
           "description": "Rate of spans successfully accepted vs refused per second",
           "fieldConfig": {
@@ -153,7 +153,7 @@ spec:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "777bf608-9a28-4d0d-9673-aa24237d3588"
+                "uid": "${datasource}"
               },
               "editorMode": "code",
               "expr": "sum(rate(otelcol_receiver_accepted_span{job=~\"$job\"}[1m])) by(receiver)",
@@ -167,7 +167,7 @@ spec:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "777bf608-9a28-4d0d-9673-aa24237d3588"
+                "uid": "${datasource}"
               },
               "editorMode": "code",
               "expr": "sum(rate(otelcol_receiver_refused_span{job=~\"$job\"}[1m])) by (receiver)",
@@ -183,7 +183,7 @@ spec:
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "777bf608-9a28-4d0d-9673-aa24237d3588"
+            "uid": "${datasource}"
           },
           "description": "Rate of metrics successfully accepted vs refused per second",
           "fieldConfig": {
@@ -267,7 +267,7 @@ spec:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "777bf608-9a28-4d0d-9673-aa24237d3588"
+                "uid": "${datasource}"
               },
               "editorMode": "code",
               "expr": "sum(rate(otelcol_receiver_accepted_metric_points_total{job=~\"$job\"}[1m])) by(receiver)",
@@ -281,7 +281,7 @@ spec:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "777bf608-9a28-4d0d-9673-aa24237d3588"
+                "uid": "${datasource}"
               },
               "editorMode": "code",
               "expr": "sum(rate(otelcol_receiver_refused_metric_points_total{job=~\"$job\"}[1m])) by (receiver)",
@@ -297,7 +297,7 @@ spec:
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "777bf608-9a28-4d0d-9673-aa24237d3588"
+            "uid": "${datasource}"
           },
           "description": "Rate of metrics successfully accepted vs refused per second",
           "fieldConfig": {
@@ -381,7 +381,7 @@ spec:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "777bf608-9a28-4d0d-9673-aa24237d3588"
+                "uid": "${datasource}"
               },
               "editorMode": "code",
               "expr": "sum(rate(otelcol_receiver_accepted_log_records{ namespace=~\"$namespace\", deployment_environment=~\"$env\", job=~\"$job\"}[1m])) by (receiver)",
@@ -395,7 +395,7 @@ spec:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "777bf608-9a28-4d0d-9673-aa24237d3588"
+                "uid": "${datasource}"
               },
               "editorMode": "code",
               "expr": "sum(rate(otelcol_receiver_refused_metric_points{ namespace=~\"$namespace\", deployment_environment=~\"$env\", job=~\"$job\"}[1m])) by (receiver)",
@@ -421,7 +421,7 @@ spec:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "777bf608-9a28-4d0d-9673-aa24237d3588"
+                "uid": "${datasource}"
               },
               "fieldConfig": {
                 "defaults": {
@@ -502,7 +502,7 @@ spec:
                 {
                   "datasource": {
                     "type": "prometheus",
-                    "uid": "777bf608-9a28-4d0d-9673-aa24237d3588"
+                    "uid": "${datasource}"
                   },
                   "editorMode": "code",
                   "expr": "sum(rate(otelcol_processor_dropped_spans{namespace=~\"$namespace\", deployment_environment=~\"$env\", job=~\"$job\"}[1m])) by (processor)",
@@ -514,7 +514,7 @@ spec:
                 {
                   "datasource": {
                     "type": "prometheus",
-                    "uid": "777bf608-9a28-4d0d-9673-aa24237d3588"
+                    "uid": "${datasource}"
                   },
                   "editorMode": "code",
                   "expr": "sum(rate(otelcol_processor_accepted_spans{namespace=~\"$namespace\", deployment_environment=~\"$env\", job=~\"$job\"}[1m])) by (processor)",
@@ -526,7 +526,7 @@ spec:
                 {
                   "datasource": {
                     "type": "prometheus",
-                    "uid": "777bf608-9a28-4d0d-9673-aa24237d3588"
+                    "uid": "${datasource}"
                   },
                   "editorMode": "code",
                   "expr": "sum(rate(otelcol_processor_refused_spans{namespace=~\"$namespace\", deployment_environment=~\"$env\", job=~\"$job\"}[1m])) by (processor)",
@@ -538,7 +538,7 @@ spec:
                 {
                   "datasource": {
                     "type": "prometheus",
-                    "uid": "777bf608-9a28-4d0d-9673-aa24237d3588"
+                    "uid": "${datasource}"
                   },
                   "editorMode": "code",
                   "expr": "",
@@ -554,7 +554,7 @@ spec:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "777bf608-9a28-4d0d-9673-aa24237d3588"
+                "uid": "${datasource}"
               },
               "fieldConfig": {
                 "defaults": {
@@ -635,7 +635,7 @@ spec:
                 {
                   "datasource": {
                     "type": "prometheus",
-                    "uid": "777bf608-9a28-4d0d-9673-aa24237d3588"
+                    "uid": "${datasource}"
                   },
                   "editorMode": "code",
                   "expr": "sum(rate(otelcol_processor_dropped_metric_points{namespace=~\"$namespace\", deployment_environment=~\"$env\", job=~\"$job\"}[$__rate_interval])) by (processor)",
@@ -647,7 +647,7 @@ spec:
                 {
                   "datasource": {
                     "type": "prometheus",
-                    "uid": "777bf608-9a28-4d0d-9673-aa24237d3588"
+                    "uid": "${datasource}"
                   },
                   "editorMode": "code",
                   "expr": "sum(rate(otelcol_processor_accepted_metric_points{namespace=~\"$namespace\", deployment_environment=~\"$env\", job=~\"$job\"}[$__rate_interval])) by (processor)",
@@ -659,7 +659,7 @@ spec:
                 {
                   "datasource": {
                     "type": "prometheus",
-                    "uid": "777bf608-9a28-4d0d-9673-aa24237d3588"
+                    "uid": "${datasource}"
                   },
                   "editorMode": "code",
                   "expr": "sum(rate(otelcol_processor_refused_metric_points{namespace=~\"$namespace\", deployment_environment=~\"$env\", job=~\"$job\"}[$__rate_interval])) by (processor)",
@@ -676,7 +676,7 @@ spec:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "777bf608-9a28-4d0d-9673-aa24237d3588"
+                "uid": "${datasource}"
               },
               "fieldConfig": {
                 "defaults": {
@@ -757,7 +757,7 @@ spec:
                 {
                   "datasource": {
                     "type": "prometheus",
-                    "uid": "777bf608-9a28-4d0d-9673-aa24237d3588"
+                    "uid": "${datasource}"
                   },
                   "editorMode": "code",
                   "expr": "sum(rate(otelcol_processor_dropped_log_records{namespace=~\"$namespace\", deployment_environment=~\"$env\", job=~\"$job\"}[1m])) by (processor)",
@@ -769,7 +769,7 @@ spec:
                 {
                   "datasource": {
                     "type": "prometheus",
-                    "uid": "777bf608-9a28-4d0d-9673-aa24237d3588"
+                    "uid": "${datasource}"
                   },
                   "editorMode": "code",
                   "expr": "sum(rate(otelcol_processor_accepted_log_records{namespace=~\"$namespace\", deployment_environment=~\"$env\", job=~\"$job\"}[1m])) by (processor)",
@@ -782,7 +782,7 @@ spec:
                 {
                   "datasource": {
                     "type": "prometheus",
-                    "uid": "777bf608-9a28-4d0d-9673-aa24237d3588"
+                    "uid": "${datasource}"
                   },
                   "editorMode": "code",
                   "expr": "sum(rate(otelcol_processor_refused_log_records{namespace=~\"$namespace\", deployment_environment=~\"$env\", job=~\"$job\"}[1m])) by (processor)",
@@ -799,7 +799,7 @@ spec:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "777bf608-9a28-4d0d-9673-aa24237d3588"
+                "uid": "${datasource}"
               },
               "fieldConfig": {
                 "defaults": {
@@ -880,7 +880,7 @@ spec:
                 {
                   "datasource": {
                     "type": "prometheus",
-                    "uid": "777bf608-9a28-4d0d-9673-aa24237d3588"
+                    "uid": "${datasource}"
                   },
                   "editorMode": "code",
                   "expr": "sum(rate(otelcol_processor_batch_batch_size_trigger_send{namespace=~\"$namespace\", deployment_environment=~\"$env\", job=~\"$job\"}[$__interval])) by(processor)",
@@ -892,7 +892,7 @@ spec:
                 {
                   "datasource": {
                     "type": "prometheus",
-                    "uid": "777bf608-9a28-4d0d-9673-aa24237d3588"
+                    "uid": "${datasource}"
                   },
                   "editorMode": "code",
                   "expr": "sum(rate(otelcol_processor_batch_timeout_trigger_send{namespace=~\"$namespace\", deployment_environment=~\"$env\", job=~\"$job\"}[$__interval])) by (processor)",
@@ -908,7 +908,7 @@ spec:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "777bf608-9a28-4d0d-9673-aa24237d3588"
+                "uid": "${datasource}"
               },
               "description": "",
               "fieldConfig": {
@@ -1062,7 +1062,7 @@ spec:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "777bf608-9a28-4d0d-9673-aa24237d3588"
+                "uid": "${datasource}"
               },
               "fieldConfig": {
                 "defaults": {
@@ -1128,7 +1128,7 @@ spec:
                 {
                   "datasource": {
                     "type": "prometheus",
-                    "uid": "777bf608-9a28-4d0d-9673-aa24237d3588"
+                    "uid": "${datasource}"
                   },
                   "editorMode": "code",
                   "expr": "histogram_quantile(0.95, sum(rate(otelcol_processor_batch_batch_send_size_bucket{namespace=~\"$namespace\", deployment_environment=~\"$env\", job=~\"$job\"}[$__rate_interval])) by (le))",
@@ -1151,7 +1151,7 @@ spec:
           "collapsed": false,
           "datasource": {
             "type": "prometheus",
-            "uid": "EQ64ugc4z"
+            "uid": "${datasource}"
           },
           "gridPos": {
             "h": 1,
@@ -1165,7 +1165,7 @@ spec:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "EQ64ugc4z"
+                "uid": "${datasource}"
               },
               "refId": "A"
             }
@@ -1176,7 +1176,7 @@ spec:
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "777bf608-9a28-4d0d-9673-aa24237d3588"
+            "uid": "${datasource}"
           },
           "description": "Rate of spans successfully exported vs Failed per second",
           "fieldConfig": {
@@ -1263,7 +1263,7 @@ spec:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "777bf608-9a28-4d0d-9673-aa24237d3588"
+                "uid": "${datasource}"
               },
               "editorMode": "code",
               "expr": "sum(rate(otelcol_exporter_sent_spans{namespace=~\"$namespace\", deployment_environment=~\"$env\", job=~\"$job\"}[1m])) by (exporter)",
@@ -1278,7 +1278,7 @@ spec:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "777bf608-9a28-4d0d-9673-aa24237d3588"
+                "uid": "${datasource}"
               },
               "editorMode": "code",
               "expr": "sum(rate(otelcol_exporter_send_failed_spans{namespace=~\"$namespace\", deployment_environment=~\"$env\", job=~\"$job\"}[1m])) by (exporter)",
@@ -1291,7 +1291,7 @@ spec:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "777bf608-9a28-4d0d-9673-aa24237d3588"
+                "uid": "${datasource}"
               },
               "editorMode": "code",
               "expr": "sum(rate(otelcol_exporter_enqueue_failed_spans{namespace=~\"$namespace\", deployment_environment=~\"$env\", job=~\"$job\"}[1m])) by (exporter)",
@@ -1307,7 +1307,7 @@ spec:
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "777bf608-9a28-4d0d-9673-aa24237d3588"
+            "uid": "${datasource}"
           },
           "description": "Rate of timeseries successfully exported per second",
           "fieldConfig": {
@@ -1424,7 +1424,7 @@ spec:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "777bf608-9a28-4d0d-9673-aa24237d3588"
+                "uid": "${datasource}"
               },
               "editorMode": "code",
               "expr": "sum(rate(otelcol_exporter_sent_metric_points_total{job=~\"$job\"}[$__rate_interval])) by (exporter) > 0",
@@ -1438,7 +1438,7 @@ spec:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "777bf608-9a28-4d0d-9673-aa24237d3588"
+                "uid": "${datasource}"
               },
               "editorMode": "code",
               "expr": "sum(rate(otelcol_exporter_send_failed_metric_points_total{job=~\"$job\"}[$__rate_interval])) by (exporter) >0",
@@ -1450,7 +1450,7 @@ spec:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "777bf608-9a28-4d0d-9673-aa24237d3588"
+                "uid": "${datasource}"
               },
               "editorMode": "code",
               "expr": "sum(rate(otelcol_exporter_enqueue_failed_metric_points{namespace=~\"$namespace\", deployment_environment=~\"$env\", job=~\"$job\"}[$__rate_interval])) by (exporter) >0",
@@ -1466,7 +1466,7 @@ spec:
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "777bf608-9a28-4d0d-9673-aa24237d3588"
+            "uid": "${datasource}"
           },
           "description": "Rate of timeseries successfully exported per second",
           "fieldConfig": {
@@ -1550,7 +1550,7 @@ spec:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "777bf608-9a28-4d0d-9673-aa24237d3588"
+                "uid": "${datasource}"
               },
               "editorMode": "code",
               "expr": "sum(rate(otelcol_exporter_sent_log_records{namespace=~\"$namespace\", deployment_environment=~\"$env\", job=~\"$job\"}[1m])) by (exporter)",
@@ -1565,7 +1565,7 @@ spec:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "777bf608-9a28-4d0d-9673-aa24237d3588"
+                "uid": "${datasource}"
               },
               "editorMode": "code",
               "expr": "sum(rate(otelcol_exporter_send_failed_log_records{namespace=~\"$namespace\", deployment_environment=~\"$env\", job=~\"$job\"}[1m])) by (exporter)",
@@ -1578,7 +1578,7 @@ spec:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "777bf608-9a28-4d0d-9673-aa24237d3588"
+                "uid": "${datasource}"
               },
               "editorMode": "code",
               "expr": "sum(rate(otelcol_exporter_enqueue_failed_log_records{namespace=~\"$namespace\", deployment_environment=~\"$env\", job=~\"$job\"}[1m])) by (exporter)",
@@ -1594,7 +1594,7 @@ spec:
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "777bf608-9a28-4d0d-9673-aa24237d3588"
+            "uid": "${datasource}"
           },
           "fieldConfig": {
             "defaults": {
@@ -1675,7 +1675,7 @@ spec:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "777bf608-9a28-4d0d-9673-aa24237d3588"
+                "uid": "${datasource}"
               },
               "editorMode": "code",
               "expr": "max(otelcol_exporter_queue_capacity{job=~\"$job\"}) by(exporter)",
@@ -1689,7 +1689,7 @@ spec:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "777bf608-9a28-4d0d-9673-aa24237d3588"
+                "uid": "${datasource}"
               },
               "editorMode": "code",
               "expr": "max(otelcol_exporter_queue_size{job=~\"$job\"}) by(exporter)",
@@ -1705,7 +1705,7 @@ spec:
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "777bf608-9a28-4d0d-9673-aa24237d3588"
+            "uid": "${datasource}"
           },
           "description": "",
           "fieldConfig": {
@@ -1845,7 +1845,7 @@ spec:
           "collapsed": false,
           "datasource": {
             "type": "prometheus",
-            "uid": "EQ64ugc4z"
+            "uid": "${datasource}"
           },
           "gridPos": {
             "h": 1,
@@ -1859,7 +1859,7 @@ spec:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "EQ64ugc4z"
+                "uid": "${datasource}"
               },
               "refId": "A"
             }
@@ -1870,7 +1870,7 @@ spec:
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "777bf608-9a28-4d0d-9673-aa24237d3588"
+            "uid": "${datasource}"
           },
           "description": "",
           "fieldConfig": {
@@ -2104,7 +2104,7 @@ spec:
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "777bf608-9a28-4d0d-9673-aa24237d3588"
+            "uid": "${datasource}"
           },
           "description": "",
           "fieldConfig": {
