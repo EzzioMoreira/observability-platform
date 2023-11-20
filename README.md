@@ -261,11 +261,35 @@ make deploy-applications
 > Em caso de erro, execute o comando novamente.
 
 
-## Acessando Plataforma de Observabilidade
+## Acessando Plataforma de Observabilidade Local
 
 - Link Grafana Web: http://observability.platform.local
 - Usuário: admin
 - Senha: admin
+
+## Plataforma Envia dados para Grafana Cloud
+
+Antes de implantar o OpenTelemetry Collector com Exporter Grafana Cloud, é necessário criar as secrets com os tokens do provider.
+
+```yaml
+apiVersion: v1
+data:
+  token: <SET TOKEN IN BASE64>
+kind: Secret
+metadata:
+  name: grafana-secret
+  namespace: observability
+```
+
+> Para encriptar base64: `echo "SET O TOKEN HERE" | base64`
+
+Copie e cole o valor no arquivo `./opentelemetry/secret-grafana-cloud.yaml`
+
+Execute o comando a seguir: 
+
+```shell
+make deploy-platform-grafana-cloud
+```
 
 ## Erros Conhecidos
 
