@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: petclinic  # Nome do deployment
+spec:
+  selector:
+    matchLabels:
+      app: petclinic  # Seleciona pods com o rótulo "app: petclinic"
+  replicas: 1  # Número de réplicas desejadas
+  template:
+    metadata:
+      labels:
+        app: petclinic  # Rótulo aplicado aos pods
+      annotations:
+        instrumentation.opentelemetry.io/inject-java: "java-instrumentation"  # Anotação para injeção de instrumentação Java
+    spec:
+      containers:
+      - name: app
+        image: springcommunity/spring-framework-petclinic:latest  # Imagem do contêiner da aplicação Spring PetClinic
+        env:
+          - name: OTEL_SERVICE_NAME
+            value: "petclinic"  # Nome do serviço para OpenTelemetry
+          - name: OTEL_JAVAAGENT_LOGGING
+            value: "application" # Nível de log do agente Java
+        resources:
+          limits:
+            memory: "512Mi"  # Limite de memória para o contêiner
+            cpu: "500m"  # Limite de CPU para o contêiner
+        ports:
+        - containerPort: 8080  # Porta em que a aplicação está escutando
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: petclinic-service  # Nome do serviço
+spec:
+  selector:
+    app: petclinic  # Seleciona pods com o rótulo "app: petclinic"
+  ports:
+  - port: 8080  # Porta exposta pelo serviço
+    targetPort: 8080  # Porta para a qual o tráfego é encaminhado dentro dos pods

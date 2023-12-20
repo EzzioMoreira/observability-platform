@@ -110,7 +110,7 @@ spec:
         transforms:
           include: .+ # Note: '.' corresponde a qualquer caractere individual e '+' garante que pelo menos um caractere esteja presente
           match_type: regexp
-          action: update
+          action: insert
           operations:
             - action: add_label
               new_label: k8s.cluster_name

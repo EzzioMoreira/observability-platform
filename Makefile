@@ -90,7 +90,7 @@ delete-cluster: ## Exclui cluster Kind
 display-cluster: ## Exibe informações do cluster
 	kubectl cluster-info --context kind-${CLUSTER_NAME}
 
-deploy-platform: ## Implanta plataforma de observabilidade
+deploy-platform-local: ## Implanta beackend da plataforma de observabilidade local
 	@echo "#### Apply the addresses $(DOCKER_IPAM_SUBNET) range has been changed ####"
 	@ eval "$$METALLB_CONFIG_FILE_CREATOR"
 	@ eval "$$METALLB_CONFIG_FILE_CREATOR" | kubectl apply -f -
@@ -99,22 +99,6 @@ deploy-platform: ## Implanta plataforma de observabilidade
 	@echo "#### Installing Minio S3 ####"
 	kubectl apply -f minio/minio.yaml
 	@echo
-
-	# @echo "#### Installing Prometheus Operator ####"
-	# helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
-	# helm upgrade --install --wait --create-namespace --namespace observability prometheus-operator prometheus-community/prometheus-operator-crds
-	# kubectl wait --for=condition=ready pod --selector=app.kubernetes.io/name=prometheus-operator --timeout=120s
-	
-	# @echo "#### Prometheus RBAC ####"
-	# kubectl apply -f prometheus/prometheus-rbac.yaml
-
-	# @echo "#### Prometheus ####"
-	# kubectl apply -f prometheus/prometheus.yaml
-	# @echo
-
-	# @echo "#### Grafana Monitorin with Prometheus ####"
-    # kubectl apply -f grafana-web/service-monitor.yaml
-    # @echo
 
 	@echo "#### Installing Grafana Operator ####"
 	helm upgrade --install --wait --create-namespace --namespace observability grafana-operator oci://ghcr.io/grafana-operator/helm-charts/grafana-operator --version v5.4.2
@@ -168,6 +152,33 @@ deploy-platform: ## Implanta plataforma de observabilidade
 		"\nUsuário: admin" \
 		"\nSenha: admin"
 
+deploy-platform-grafana-cloud: ## Implanta plataforma de observabilidade envia dados na Grafana Cloud
+	#@echo "#### Installing CertManager ####"
+	#kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.13.1/cert-manager.yaml
+	#@echo
+	
+	@echo "#### Installing OpenTelemetry Operator ####"
+	kubectl apply -f https://github.com/open-telemetry/opentelemetry-operator/releases/latest/download/opentelemetry-operator.yaml
+	kubectl wait -n opentelemetry-operator-system --for=condition=ready pod --selector=app.kubernetes.io/name=opentelemetry-operator --timeout=120s
+	@echo
+	
+	@echo "#### Installing OpenTelemetry Instrumentation ####"
+	kubectl apply -f opentelemetry/instrumentation.yaml
+	kubectl get instrumentation
+	@echo
+	
+	@echo "#### Installing OpenTelemetry Sidecar Collector ####"
+	kubectl apply -f opentelemetry/sidecar-collector.yaml
+	kubectl get OpenTelemetryCollector sidecar-jaeger
+	@echo
+
+	@echo "#### Installing OpenTelemetry Agent Collector ####"
+	kubectl apply -f opentelemetry/secret-grafana-cloud.yaml
+	kubectl apply -f opentelemetry/platform-agent-collector-rbac.yaml
+	kubectl apply -f opentelemetry/platform-agent-collector-grafana-cloud.yaml
+	@echo
+
+
 deploy-applications: ## Implanta aplicações de exemplo
 	@echo "#### Installing App Trace Generator ####"
 	kubectl apply -f app/app-trace-generate/app-trace-generate.yaml
@@ -175,10 +186,29 @@ deploy-applications: ## Implanta aplicações de exemplo
 
 	@echo "#### Installing Metric Generator ####"
 	kubectl apply -f app/app-metric-generate/app-metric-generate.yaml
+	@echo
+
+	@echo "#### Installing App Pet Clinic ####"
+	kubectl apply -f app/app-petclinic/deployment.yaml
+
+	@echo "#### Access App Metric Generator  and Trace Generator ####"
+	kubectl apply -f app/app-metric-generate/app-metric-generate.yaml
+	kubectl apply -f app/app-trace-generate/app-trace-generate.yaml
 
 delete-applications: ## Exclui aplicações de exemplo
 	@echo "#### Deleting App Trace Generator ####"
 	kubectl delete -f app/app-trace-generate/app-trace-generate.yaml
 	@echo
+
 	@echo "#### Deleting App Metric Generator ####"
 	kubectl delete -f app/app-metric-generate/app-metric-generate.yaml
+	@echo
+
+	@echo "#### Deleting App Pet Clinic ####"
+	kubectl delete -f app/app-petclinic/deployment.yaml
+	@echo
+
+	@echo "#### Deleting App Metric Generator  and Trace Generator ####"
+	kubectl delete -f app/app-metric-generate/app-metric-generate.yaml
+	kubectl delete -f app/app-trace-generate/app-trace-generate.yaml
+
