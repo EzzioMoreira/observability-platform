@@ -153,6 +153,10 @@ deploy-platform-local: ## Implanta beackend da plataforma de observabilidade loc
 		"\nSenha: admin"
 
 deploy-platform-grafana-cloud: ## Implanta plataforma de observabilidade envia dados na Grafana Cloud
+	#@echo "#### Installing CertManager ####"
+	#kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.13.1/cert-manager.yaml
+	#@echo
+	
 	@echo "#### Installing OpenTelemetry Operator ####"
 	kubectl apply -f https://github.com/open-telemetry/opentelemetry-operator/releases/latest/download/opentelemetry-operator.yaml
 	kubectl wait -n opentelemetry-operator-system --for=condition=ready pod --selector=app.kubernetes.io/name=opentelemetry-operator --timeout=120s
@@ -187,6 +191,10 @@ deploy-applications: ## Implanta aplicações de exemplo
 	@echo "#### Installing App Pet Clinic ####"
 	kubectl apply -f app/app-petclinic/deployment.yaml
 
+	@echo "#### Access App Metric Generator  and Trace Generator ####"
+	kubectl apply -f app/app-metric-generate/app-metric-generate.yaml
+	kubectl apply -f app/app-trace-generate/app-trace-generate.yaml
+
 delete-applications: ## Exclui aplicações de exemplo
 	@echo "#### Deleting App Trace Generator ####"
 	kubectl delete -f app/app-trace-generate/app-trace-generate.yaml
@@ -198,3 +206,9 @@ delete-applications: ## Exclui aplicações de exemplo
 
 	@echo "#### Deleting App Pet Clinic ####"
 	kubectl delete -f app/app-petclinic/deployment.yaml
+	@echo
+
+	@echo "#### Deleting App Metric Generator  and Trace Generator ####"
+	kubectl delete -f app/app-metric-generate/app-metric-generate.yaml
+	kubectl delete -f app/app-trace-generate/app-trace-generate.yaml
+
