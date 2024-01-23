@@ -81,7 +81,7 @@ graph LR
 
 ### Componente Intrumentação Automática
 
-O Resource Instrumentation do Operator OponTelemetry implementa as configurações necessárias no Pod, através do Init Container injentando agentes ou biblioteca do OpenTelemetry, permitindo a geração, colete e envio dos dados de telemetria.
+O Resource Instrumentation do Operator OpenTelemetry implementa as configurações necessárias no Pod, através do Init Container injentando agentes ou biblioteca do OpenTelemetry, permitindo a geração, colete e envio dos dados de telemetria.
 
 ```mermaid
 ---
@@ -113,7 +113,7 @@ init --->|"Inject agent or lib"| app
 
 ### Componente Sidecar OpenTelemetry Collector
 
-O Resource Sidecar do Operator OponTelemetry cria um segundo container no Pod da aplicação que será responsável pela coleta e transporte dos dados de telemetria dos serviços que não suportam o envio dos dados diretamente para o collector central.
+O Resource Sidecar do Operator OpenTelemetry cria um segundo container no Pod da aplicação que será responsável pela coleta e transporte dos dados de telemetria dos serviços que não suportam o envio dos dados diretamente para o collector central.
 
 ```mermaid
 ---
@@ -145,7 +145,7 @@ app-sidecar --->|"Telemetry collect"| app
 
 ### Componente OpenTelemetry Collector
 
-O Resource Collector do Operator OponTelemetry é responsável por centralizar o recebimento e processamento de diversas fontes do cluster Kubernetes e encaminhar os dados para um ou mais provedores de observabilidade.
+O Resource Collector do Operator OpenTelemetry é responsável por centralizar o recebimento e processamento de diversas fontes do cluster Kubernetes e encaminhar os dados para um ou mais provedores de observabilidade.
 
 ```mermaid
 ---
